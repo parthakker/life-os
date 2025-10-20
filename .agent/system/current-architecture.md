@@ -84,15 +84,58 @@ vector_store.json (immediate searchability)
 - **Claude API:** ~$0.36/month (20 messages/day with Haiku)
 - **Total:** ~$5-6/month for production
 
-## Next Phase (2B)
+## MCP Integration (In Progress)
 
-**Google Calendar Integration:**
+**MCPs Being Installed:**
+1. **GitHub MCP** - Repository management, push code, create PRs
+2. **Filesystem MCP** - Better file operations, database backups
+3. **Google Calendar MCP** - Calendar integration for Phase 2B
+
+**See:** `.agent/decisions/mcp-integration.md` for details
+
+## Next Phases
+
+**Phase 2B: Calendar Integration (Week 2)**
+- Google Calendar MCP integration
 - New tool: `schedule_event`
+- Natural language date parsing
 - Event vs Task differentiation
-- "schedule" keyword detection
-- Two-way sync with Google Calendar
+- See: `.agent/decisions/phase-2b-4-roadmap.md`
 
-**Image Support (Future):**
-- CLIP embeddings for images
-- Screenshot categorization
-- Multimodal vector search
+**Phase 2C: Calendar + RAG (Week 2)**
+- Vectorize calendar events
+- Unified search across tasks/notes/events
+- Date range filtering
+
+**Phase 3B: Intelligent Import - Images/PDFs (Week 3-4)**
+- Forward vendor contracts → extract events
+- Screenshot event flyers → auto-schedule
+- Claude vision API for OCR
+- High-value feature for wedding planning
+
+**Phase 3C: Web Link Import (Week 4)**
+- Eventbrite links → extract events
+- Facebook events → import automatically
+- Structured data parsing
+
+**Phase 4: Advanced Features (Future)**
+- Multi-calendar support
+- Smart conflict detection
+- Recurring event modification
+- Calendar sharing
+
+**See:** `.agent/decisions/phase-2b-4-roadmap.md` for full roadmap
+
+## Migration Plans
+
+**Database:**
+- Current: SQLite (perfect for current scale)
+- Future: PostgreSQL with pgvector (when >10k items)
+- Render offers free PostgreSQL tier
+- Migration script ready when needed
+
+**Vector Store:**
+- Current: Custom JSON store (fast, simple)
+- Future: pgvector extension (if needed for scale)
+- Trigger: >10MB vector store or >2 second searches
+- Keep JSON for now - working great

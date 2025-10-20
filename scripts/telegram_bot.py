@@ -55,31 +55,31 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /stats command"""
-    import sqlite3
-    from pathlib import Path
-
-    DB_PATH = Path(__file__).parent.parent / 'data.db'
+    from db_helper import execute_query
 
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        # Get task counts
+        active_tasks_result = execute_query(
+            'SELECT COUNT(*) FROM tasks WHERE completed = ?',
+            (False,),
+            fetch='one'
+        )
+        active_tasks = active_tasks_result[0] if active_tasks_result else 0
 
-        # Get task count
-        cursor.execute('SELECT COUNT(*) FROM tasks WHERE completed = 0')
-        active_tasks = cursor.fetchone()[0]
-
-        cursor.execute('SELECT COUNT(*) FROM tasks WHERE completed = 1')
-        completed_tasks = cursor.fetchone()[0]
+        completed_tasks_result = execute_query(
+            'SELECT COUNT(*) FROM tasks WHERE completed = ?',
+            (True,),
+            fetch='one'
+        )
+        completed_tasks = completed_tasks_result[0] if completed_tasks_result else 0
 
         # Get note count
-        cursor.execute('SELECT COUNT(*) FROM notes')
-        notes_count = cursor.fetchone()[0]
+        notes_count_result = execute_query('SELECT COUNT(*) FROM notes', fetch='one')
+        notes_count = notes_count_result[0] if notes_count_result else 0
 
         # Get category count
-        cursor.execute('SELECT COUNT(*) FROM categories')
-        categories_count = cursor.fetchone()[0]
-
-        conn.close()
+        categories_count_result = execute_query('SELECT COUNT(*) FROM categories', fetch='one')
+        categories_count = categories_count_result[0] if categories_count_result else 0
 
         await update.message.reply_text(
             f"Life OS Statistics:\n\n"

@@ -9,6 +9,7 @@ numpy==2.0.2
 
 # Database
 # SQLite is built into Python - no installation needed
+psycopg2-binary==2.9.9  # PostgreSQL adapter for production
 
 # Optional: If you want to use Flask API (api_server.py)
 flask==3.1.0

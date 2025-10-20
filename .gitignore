@@ -3,11 +3,13 @@
 *.env
 
 # Database files (contains your personal data)
-data.db
-*.db
+# TEMPORARY: Uncommenting for initial deployment ONLY
+# data.db
+# *.db
 
 # Vector store (contains embeddings of your data)
-vector_store.json
+# TEMPORARY: Uncommenting for initial deployment ONLY
+# vector_store.json
 
 # Python cache
 __pycache__/
@@ -28,6 +30,9 @@ ENV/
 *.swp
 *.swo
 
+# Claude Code config (contains MCP settings)
+.claude/
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -35,10 +40,17 @@ Thumbs.db
 # Logs
 *.log
 
+# Google Calendar credentials (Phase 2B)
+google-calendar-credentials.json
+google-calendar-token.json
+
 # Archive folders (your backups)
 archive/
 old-data-*/
 archive-old-implementation/
+
+# Agent logs (may contain sensitive info)
+.agent/logs/
 
 # Test files
 test_*.py

@@ -6,45 +6,41 @@ Routes messages to appropriate tools using Claude AI
 import os
 import json
 import sys
-import sqlite3
-from pathlib import Path
 from datetime import datetime, timedelta
 import anthropic
 from tools_manifest import get_tool_prompt
 from vector_store import add_to_vector_store
 from rag_query import execute_rag_query
-
-DB_PATH = Path(__file__).parent.parent / 'data.db'
+from db_helper import execute_query, execute_insert
 
 
 def get_category_id(category_name):
     """Get category ID from database by name (case-insensitive, partial match)"""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
     # Try exact match first
-    cursor.execute('SELECT id FROM categories WHERE LOWER(name) = LOWER(?)', (category_name,))
-    result = cursor.fetchone()
+    result = execute_query(
+        'SELECT id FROM categories WHERE LOWER(name) = LOWER(?)',
+        (category_name,),
+        fetch='one'
+    )
 
     if not result:
         # Try partial match (e.g., "Wedding" matches "Wedding - Vendors")
-        cursor.execute('SELECT id FROM categories WHERE LOWER(name) LIKE LOWER(?)', (f'%{category_name}%',))
-        result = cursor.fetchone()
-
-    conn.close()
+        result = execute_query(
+            'SELECT id FROM categories WHERE LOWER(name) LIKE LOWER(?)',
+            (f'%{category_name}%',),
+            fetch='one'
+        )
 
     return result[0] if result else None
 
 
 def get_category_name(category_id):
     """Get category name from database by ID"""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('SELECT name FROM categories WHERE id = ?', (category_id,))
-    result = cursor.fetchone()
-
-    conn.close()
+    result = execute_query(
+        'SELECT name FROM categories WHERE id = ?',
+        (category_id,),
+        fetch='one'
+    )
 
     return result[0] if result else None
 
@@ -246,17 +242,11 @@ def execute_add_task(category_name, content, due_date=None):
     parsed_due_date = parse_due_date(due_date)
 
     # Add to database
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        INSERT INTO tasks (category_id, content, due_date, created_date)
-        VALUES (?, ?, ?, ?)
-    ''', (category_id, content, parsed_due_date, datetime.now().isoformat()))
-
-    task_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
+    task_id = execute_insert(
+        'INSERT INTO tasks (category_id, content, due_date, created_date) VALUES (?, ?, ?, ?)',
+        (category_id, content, parsed_due_date, datetime.now().isoformat()),
+        return_id=True
+    )
 
     # Get actual category name from DB
     actual_category = get_category_name(category_id)
@@ -294,17 +284,11 @@ def execute_add_note(category_name, content):
         raise Exception(f"Unknown category: {category_name}")
 
     # Add to database
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        INSERT INTO notes (category_id, content, created_date)
-        VALUES (?, ?, ?)
-    ''', (category_id, content, datetime.now().isoformat()))
-
-    note_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
+    note_id = execute_insert(
+        'INSERT INTO notes (category_id, content, created_date) VALUES (?, ?, ?)',
+        (category_id, content, datetime.now().isoformat()),
+        return_id=True
+    )
 
     # Get actual category name from DB
     actual_category = get_category_name(category_id)
