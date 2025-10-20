@@ -32,6 +32,8 @@ ENV/
 
 # Claude Code config (contains MCP settings)
 .claude/
+# But include workflows (these should be version controlled)
+!.claude/workflows/
 
 # OS files
 .DS_Store

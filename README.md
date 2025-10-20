@@ -94,6 +94,40 @@ python scripts/vector_store.py vectorize
 python scripts/telegram_bot.py
 ```
 
+## Development Workflows
+
+Life OS includes **automated workflows** for development, deployment, and operations. These are like DevOps agents that help YOU manage the project.
+
+### Available Workflows
+
+| Workflow | Purpose | Use When |
+|----------|---------|----------|
+| `/workflow new-session` | Session startup with health checks | Starting your coding session |
+| `/workflow test-and-push` | Test, commit, push, and deploy | You've written code and want to deploy |
+| `/workflow deploy` | Complete deployment automation | Ready to deploy to production |
+| `/workflow end-session` | Clean shutdown & documentation | Ending your coding session |
+| `/workflow new-feature` | Feature planning wizard | Planning a new feature |
+| `/workflow emergency` | Production incident response | Something is broken in production |
+
+### Quick Example
+
+```
+$ /workflow test-and-push
+
+✅ Running tests... 15 passed
+📝 Suggested commit: "feat(calendar): Add Google Calendar agent"
+✅ Committed and pushed to GitHub
+🚀 Deploying to Render...
+✅ Deployment successful!
+✅ Documentation updated
+
+All done! 🎉
+```
+
+**See:** `.claude/workflows/README.md` for complete documentation
+
+---
+
 ## System Architecture
 
 ### Components
