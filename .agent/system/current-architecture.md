@@ -1,7 +1,7 @@
 # Current Production Architecture
 
-**Last Updated:** October 19, 2025
-**Phase:** 2A (RAG + Auto-Vectorization)
+**Last Updated:** October 20, 2025 - 2:00 PM
+**Phase:** 2A (RAG + Auto-Vectorization) - **DEPLOYING TO RENDER**
 
 ## System Flow
 
@@ -16,7 +16,7 @@ router.py - Agentic routing (Claude 3.5 Haiku)
    ↓         ↓              ↓
 add_task  add_note    ask_question
    ↓         ↓              ↓
-database  database    vector_store.py
+PostgreSQL PostgreSQL  vector_store.py
    ↓         ↓              ↓
 auto-vectorize auto-vectorize  RAG query
    ↓         ↓              ↓
@@ -29,69 +29,134 @@ vector_store.json (immediate searchability)
 - Receives user messages
 - Handles /start, /help, /stats commands
 - Routes all text messages to router
+- **Updated:** Uses db_helper for PostgreSQL/SQLite abstraction
 
 ### 2. Agentic Router (`scripts/router.py`)
 - Uses Claude 3.5 Haiku for intelligent routing
 - 3 tools: `add_task`, `add_note`, `ask_question`
 - Extracts category, content, due dates, filters
 - Auto-vectorizes new items
+- **Updated:** Uses db_helper for database operations
 
-### 3. Vector Store (`scripts/vector_store.py`)
+### 3. Database Helper (`scripts/db_helper.py`) **NEW**
+- Auto-detects PostgreSQL vs SQLite
+- Checks for DATABASE_URL environment variable
+- PostgreSQL in production (Render)
+- SQLite for local development
+- Seamless switching between databases
+
+### 4. Vector Store (`scripts/vector_store.py`)
 - Custom JSON-based vector database
 - sentence-transformers: `all-MiniLM-L6-v2`
 - 384-dimensional embeddings
 - Cosine similarity search
 - Functions:
-  - `vectorize_all_data()` - One-time vectorization
+  - `vectorize_all_data()` - Batch vectorization
   - `search_memory()` - Semantic search
   - `add_to_vector_store()` - Auto-vectorization
 
-### 4. RAG Query (`scripts/rag_query.py`)
+### 5. RAG Query (`scripts/rag_query.py`)
 - Semantic search + filtering
 - Simple formatted list output
 - Top 10 results by similarity
 - Filters: category, type, status
 
-### 5. Tool Manifest (`scripts/tools_manifest.py`)
+### 6. Tool Manifest (`scripts/tools_manifest.py`)
 - Defines available tools and schemas
 - Used by router for Claude AI prompting
 
+### 7. PostgreSQL Migration (`scripts/migrate_to_postgres.py`) **NEW**
+- One-time migration from SQLite → PostgreSQL
+- Migrates categories, tasks, notes
+- Preserves all relationships and data
+- Run once after initial Render deployment
+
 ## Database Schema
 
-**SQLite (data.db):**
+**PostgreSQL (Production):**
 - `categories` - 41 categories with parent_category support
-- `tasks` - id, category_id, content, due_date, completed, created_date
-- `notes` - id, category_id, content, created_date
+- `tasks` - id (SERIAL), category_id, content, due_date, completed (BOOLEAN), created_date
+- `notes` - id (SERIAL), category_id, content, created_date
+
+**SQLite (Local Development):**
+- Same schema, different data types (INTEGER PRIMARY KEY vs SERIAL)
 
 ## Deployment
 
-**Platform:** Railway (or Render)
+**Platform:** Render (render.com)
+**Service Type:** Background Worker (always running)
+**Service ID:** srv-d3r6u5ogjchc73bsiibg
+**Plan:** $7/month (paid tier)
 **Runtime:** Python 3.11+
+**Database:** PostgreSQL (free tier)
+
 **Dependencies:** See `requirements.txt`
 - python-telegram-bot
 - anthropic
 - sentence-transformers
 - torch, numpy
+- **psycopg2-binary** (PostgreSQL adapter)
 
-**Environment Variables:**
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_USER_ID`
-- `ANTHROPIC_API_KEY`
+**Environment Variables (Set in Render):**
+- `TELEGRAM_BOT_TOKEN` - Bot authentication
+- `TELEGRAM_USER_ID` - Security (only you can use bot)
+- `ANTHROPIC_API_KEY` - Claude AI access
+- `DATABASE_URL` - PostgreSQL connection (auto-set by Render)
 
-## Cost Estimates
+## Cost Breakdown
 
-- **Railway:** $5/month (Hobby plan)
-- **Claude API:** ~$0.36/month (20 messages/day with Haiku)
-- **Total:** ~$5-6/month for production
+- **Render Background Worker:** $7.00/month (paid tier, always awake)
+- **PostgreSQL Database:** $0.00/month (free tier, 1GB storage)
+- **Claude Haiku API:** ~$0.36/month (20 messages/day)
+- **Total:** ~$7.36/month for production
 
-## MCP Integration (In Progress)
+## MCP Integration **ACTIVE**
 
-**MCPs Being Installed:**
-1. **GitHub MCP** - Repository management, push code, create PRs
-2. **Filesystem MCP** - Better file operations, database backups
-3. **Google Calendar MCP** - Calendar integration for Phase 2B
+**MCPs Configured:**
+1. ✅ **GitHub MCP** - Repository management, create repos, PRs, issues
+2. ✅ **Render MCP** - Deployment logs, shell access, service monitoring **NEW**
+3. ⏳ **Google Calendar MCP** - Calendar integration (disabled, for Phase 2B)
 
-**See:** `.agent/decisions/mcp-integration.md` for details
+**MCP Config Location:**
+`.claude/settings.local.json`
+
+**See:** `.agent/decisions/mcp-integration.md` for setup details
+
+## Git Configuration
+
+**Personal Projects (parthakker):**
+- SSH: `git@github.com-personal:parthakker/life-os.git`
+- Uses: `~/.ssh/id_ed25519_personal`
+
+**Business Projects (princetonaipartners):**
+- SSH: `git@github.com:princetonaipartners/...`
+- Uses: `~/.ssh/id_ed25519`
+
+**Configuration:** `~/.ssh/config`
+
+## Deployment Architecture
+
+```
+GitHub (parthakker/life-os)
+        ↓ (auto-deploy on push)
+Render Service (srv-d3r6u5ogjchc73bsiibg)
+        ├─ Build: pip install -r requirements.txt
+        ├─ Start: python scripts/telegram_bot.py
+        ├─ Database: PostgreSQL (lifeos)
+        └─ Files: vector_store.json (deployed with code)
+```
+
+## Data Persistence
+
+**PostgreSQL:**
+- Categories, tasks, notes
+- Persists across restarts
+- Free tier: 1GB storage, 1M rows
+
+**Vector Store (JSON file):**
+- vector_store.json deployed with code
+- Persists on Render filesystem
+- Re-vectorize if needed via shell
 
 ## Next Phases
 
@@ -111,31 +176,43 @@ vector_store.json (immediate searchability)
 - Forward vendor contracts → extract events
 - Screenshot event flyers → auto-schedule
 - Claude vision API for OCR
-- High-value feature for wedding planning
 
 **Phase 3C: Web Link Import (Week 4)**
 - Eventbrite links → extract events
 - Facebook events → import automatically
-- Structured data parsing
 
 **Phase 4: Advanced Features (Future)**
 - Multi-calendar support
 - Smart conflict detection
 - Recurring event modification
-- Calendar sharing
 
 **See:** `.agent/decisions/phase-2b-4-roadmap.md` for full roadmap
 
-## Migration Plans
+## Security Notes
 
-**Database:**
-- Current: SQLite (perfect for current scale)
-- Future: PostgreSQL with pgvector (when >10k items)
-- Render offers free PostgreSQL tier
-- Migration script ready when needed
+1. **Data Files:**
+   - data.db and vector_store.json temporarily exposed in GitHub for initial migration
+   - Will be re-hidden in .gitignore after successful deployment
+   - Local data files remain in .gitignore for future commits
 
-**Vector Store:**
-- Current: Custom JSON store (fast, simple)
-- Future: pgvector extension (if needed for scale)
-- Trigger: >10MB vector store or >2 second searches
-- Keep JSON for now - working great
+2. **API Keys:**
+   - All stored in Render environment variables
+   - Never committed to GitHub
+   - MCP tokens stored in local `.claude/settings.local.json` (gitignored)
+
+3. **PostgreSQL:**
+   - Connection string includes credentials
+   - Only accessible via DATABASE_URL environment variable
+   - Render manages security
+
+## Current Status
+
+- ✅ Code complete and pushed to GitHub
+- ✅ Render service configured
+- ✅ PostgreSQL database created
+- ✅ Environment variables set
+- ⏳ Deployment in progress (auto-deploying)
+- ⏳ Migration pending (run after deployment)
+- ⏳ Testing pending
+
+**Next:** Restart Claude Code → Use Render MCP → Complete deployment
