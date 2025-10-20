@@ -1,0 +1,45 @@
+# Sensitive files - DO NOT commit
+.env
+*.env
+
+# Database files (contains your personal data)
+data.db
+*.db
+
+# Vector store (contains embeddings of your data)
+vector_store.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Archive folders (your backups)
+archive/
+old-data-*/
+archive-old-implementation/
+
+# Test files
+test_*.py
+*_test.py

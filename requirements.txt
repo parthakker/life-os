@@ -1,0 +1,15 @@
+# Core dependencies
+python-telegram-bot==21.0
+anthropic==0.39.0
+
+# Vector embeddings
+sentence-transformers==3.3.1
+torch==2.5.1
+numpy==2.0.2
+
+# Database
+# SQLite is built into Python - no installation needed
+
+# Optional: If you want to use Flask API (api_server.py)
+flask==3.1.0
+flask-cors==5.0.0
