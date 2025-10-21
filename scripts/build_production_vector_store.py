@@ -31,23 +31,37 @@ print("=" * 70)
 conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-# Get all tasks
+# Get all tasks with full category hierarchy
 print("\n[1/4] Fetching tasks from PostgreSQL...")
 cursor.execute('''
-    SELECT t.id, c.name, t.content, t.due_date, t.created_date, t.completed
+    SELECT
+        t.id,
+        c.name as category_name,
+        p.name as parent_name,
+        t.content,
+        t.due_date,
+        t.created_date,
+        t.completed
     FROM tasks t
     JOIN categories c ON t.category_id = c.id
+    LEFT JOIN categories p ON c.parent_id = p.id
     ORDER BY t.created_date DESC
 ''')
 tasks = cursor.fetchall()
 print(f"  Found {len(tasks)} tasks")
 
-# Get all notes
+# Get all notes with full category hierarchy
 print("\n[2/4] Fetching notes from PostgreSQL...")
 cursor.execute('''
-    SELECT n.id, c.name, n.content, n.created_date
+    SELECT
+        n.id,
+        c.name as category_name,
+        p.name as parent_name,
+        n.content,
+        n.created_date
     FROM notes n
     JOIN categories c ON n.category_id = c.id
+    LEFT JOIN categories p ON c.parent_id = p.id
     ORDER BY n.created_date DESC
 ''')
 notes = cursor.fetchall()
@@ -75,14 +89,21 @@ vector_store = {
 vectorized = 0
 for task in tasks:
     task_id = task['id']
-    category = task['name']
+    category_name = task['category_name']
+    parent_name = task['parent_name']
     content = task['content']
     due_date = task['due_date']
     created = task['created_date']
     completed = task['completed']
 
+    # Build full category path (e.g., "Wedding - Vendors")
+    if parent_name:
+        full_category = f"{parent_name} - {category_name}"
+    else:
+        full_category = category_name
+
     # Create rich text for better embeddings
-    embedding_text = f"{category}: {content}"
+    embedding_text = f"{full_category}: {content}"
     if due_date:
         embedding_text += f" (due: {due_date})"
 
@@ -100,7 +121,7 @@ for task in tasks:
         vector_store['items'].append({
             'id': task_id,
             'type': 'task',
-            'category': category,
+            'category': full_category,
             'content': content,
             'due_date': due_date,
             'completed': completed,
@@ -122,12 +143,19 @@ print(f"  [OK] Vectorized {vectorized} tasks")
 note_vectorized = 0
 for note in notes:
     note_id = note['id']
-    category = note['name']
+    category_name = note['category_name']
+    parent_name = note['parent_name']
     content = note['content']
     created = note['created_date']
 
+    # Build full category path (e.g., "Notes - General")
+    if parent_name:
+        full_category = f"{parent_name} - {category_name}"
+    else:
+        full_category = category_name
+
     # Create rich text for better embeddings
-    embedding_text = f"{category}: {content}"
+    embedding_text = f"{full_category}: {content}"
 
     try:
         # Get embedding from OpenAI
@@ -143,7 +171,7 @@ for note in notes:
         vector_store['items'].append({
             'id': note_id,
             'type': 'note',
-            'category': category,
+            'category': full_category,
             'content': content,
             'created_date': created,
             'embedding_text': embedding_text,
