@@ -17,7 +17,7 @@ if not DATABASE_URL:
     print("This script should be run on Render after deployment")
     exit(1)
 
-print("[Migration] Starting SQLite → PostgreSQL migration...")
+print("[Migration] Starting SQLite -> PostgreSQL migration...")
 print(f"[Migration] Source: {DB_PATH}")
 print(f"[Migration] Target: PostgreSQL (DATABASE_URL)")
 
@@ -36,8 +36,9 @@ pg_cursor.execute("""
     CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
-        parent_category TEXT,
-        sort_order INTEGER DEFAULT 0
+        description TEXT,
+        sort_order INTEGER DEFAULT 0,
+        parent_id INTEGER REFERENCES categories(id)
     )
 """)
 
@@ -62,25 +63,39 @@ pg_cursor.execute("""
 """)
 
 pg_conn.commit()
-print("[✓] Tables created successfully")
+print("[OK] Tables created successfully")
 
-# Migrate categories
+# Migrate categories (two passes: first create without parent_id, then update parent_id)
 print("\n[2/4] Migrating categories...")
-sqlite_cursor.execute("SELECT id, name, parent_category, sort_order FROM categories ORDER BY id")
+sqlite_cursor.execute("SELECT id, name, description, sort_order, parent_id FROM categories ORDER BY id")
 categories = sqlite_cursor.fetchall()
 
 category_id_map = {}  # Old ID → New ID mapping
 
-for old_id, name, parent_category, sort_order in categories:
+# First pass: Create all categories without parent_id
+for old_id, name, description, sort_order, parent_id in categories:
     pg_cursor.execute(
-        "INSERT INTO categories (name, parent_category, sort_order) VALUES (%s, %s, %s) RETURNING id",
-        (name, parent_category, sort_order)
+        "INSERT INTO categories (name, description, sort_order) VALUES (%s, %s, %s) RETURNING id",
+        (name, description, sort_order)
     )
     new_id = pg_cursor.fetchone()[0]
     category_id_map[old_id] = new_id
 
 pg_conn.commit()
-print(f"[✓] Migrated {len(categories)} categories")
+
+# Second pass: Update parent_id relationships
+for old_id, name, description, sort_order, old_parent_id in categories:
+    if old_parent_id:  # If category has a parent
+        new_id = category_id_map[old_id]
+        new_parent_id = category_id_map.get(old_parent_id)
+        if new_parent_id:
+            pg_cursor.execute(
+                "UPDATE categories SET parent_id = %s WHERE id = %s",
+                (new_parent_id, new_id)
+            )
+
+pg_conn.commit()
+print(f"[OK] Migrated {len(categories)} categories")
 
 # Migrate tasks
 print("\n[3/4] Migrating tasks...")
@@ -96,7 +111,7 @@ for category_id, content, due_date, completed, created_date in tasks:
         )
 
 pg_conn.commit()
-print(f"[✓] Migrated {len(tasks)} tasks")
+print(f"[OK] Migrated {len(tasks)} tasks")
 
 # Migrate notes
 print("\n[4/4] Migrating notes...")
@@ -112,7 +127,7 @@ for category_id, content, created_date in notes:
         )
 
 pg_conn.commit()
-print(f"[✓] Migrated {len(notes)} notes")
+print(f"[OK] Migrated {len(notes)} notes")
 
 # Verify migration
 print("\n[Verification]")
@@ -129,7 +144,7 @@ print(f"  Notes: {pg_cursor.fetchone()[0]}")
 sqlite_conn.close()
 pg_conn.close()
 
-print("\n[✓] Migration completed successfully!")
+print("\n[OK] Migration completed successfully!")
 print("\nNext steps:")
 print("1. Test your bot via Telegram")
 print("2. Verify data with /stats command")
