@@ -8,8 +8,7 @@
 # *.db
 
 # Vector store (contains embeddings of your data)
-# TEMPORARY: Uncommenting for initial deployment ONLY
-# vector_store.json
+vector_store.json
 
 # Python cache
 __pycache__/
