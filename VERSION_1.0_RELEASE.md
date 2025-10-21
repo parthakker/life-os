@@ -336,6 +336,57 @@ embedding = get_embedding(embedding_text)
 - Combined task/note/event search
 - Automatic calendar event vectorization
 
+### Phase 2D: React Dashboard (2-3 days) 🆕
+
+**THE VISUAL INTERFACE for Life OS:**
+
+**Features:**
+- Clean, modern dashboard using React + shadcn/ui
+- View all tasks, notes, and calendar events
+- Full CRUD operations (create, edit, delete)
+- Mark tasks as complete/incomplete
+- Move tasks/notes between categories
+- Semantic search via existing RAG system
+- Calendar view integration
+- Responsive, customizable interface
+
+**Tech Stack:**
+- React.js + Vite + TypeScript
+- shadcn/ui component library + MCP
+- Tailwind CSS styling
+- Flask REST API backend
+- Shared SQLite database with Telegram bot
+
+**Why This Matters:**
+- Telegram is great for quick capture on-the-go
+- Dashboard provides visual overview and bulk management
+- Best of both worlds: mobile capture + desktop organization
+- See everything at a glance
+- Easier to manage large amounts of data visually
+
+**Architecture:**
+```
+┌─────────────────────────────────────┐
+│  User Interfaces (Dual Access)     │
+│                                     │
+│  Telegram Bot    React Dashboard   │
+│      ↓                 ↓            │
+│  router.py      Flask REST API     │
+│      └─────────┬─────────┘          │
+│                ↓                    │
+│         SQLite Database             │
+│         Vector Store (RAG)          │
+└─────────────────────────────────────┘
+```
+
+**User Experience:**
+- Morning: Check dashboard for overview of today's tasks
+- On-the-go: Use Telegram to capture quick tasks/notes
+- Evening: Review and organize in dashboard
+- Calendar: Visual view of all events and deadlines
+
+**This makes Life OS a complete personal management system!**
+
 ### Phase 3B: Intelligent Import - Images/PDFs (3-4 days)
 
 **THE KILLER FEATURE for wedding planning:**
