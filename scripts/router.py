@@ -45,6 +45,56 @@ def get_category_name(category_id):
     return result[0] if result else None
 
 
+def build_category_context():
+    """Build category list with descriptions from database"""
+    # Query all categories with their hierarchy info
+    categories = execute_query(
+        'SELECT id, name, description, parent_id FROM categories ORDER BY sort_order, name',
+        fetch='all'
+    )
+
+    if not categories:
+        return "- Tasks: Generic catch-all tasks"
+
+    # Build hierarchical structure
+    # Group by parent_id
+    top_level = []
+    children_map = {}
+
+    for cat in categories:
+        if cat['parent_id'] is None:
+            top_level.append(cat)
+        else:
+            parent_id = cat['parent_id']
+            if parent_id not in children_map:
+                children_map[parent_id] = []
+            children_map[parent_id].append(cat)
+
+    # Build the prompt text
+    lines = []
+
+    for parent in top_level:
+        parent_name = parent['name']
+        parent_desc = parent['description'] or ""
+        parent_id = parent['id']
+
+        # Check if this category has children
+        if parent_id in children_map:
+            # Parent with children
+            lines.append(f"\n**{parent_name}** (has subcategories - choose specific one):")
+            if parent_desc:
+                lines.append(f"  ({parent_desc})")
+            for child in children_map[parent_id]:
+                child_name = child['name']
+                child_desc = child['description'] or ""
+                lines.append(f"  - {parent_name} - {child_name}: {child_desc}")
+        else:
+            # Top-level category without children
+            lines.append(f"- {parent_name}: {parent_desc}")
+
+    return '\n'.join(lines)
+
+
 def parse_due_date(date_str):
     """Parse natural language due dates to ISO format"""
     if not date_str or date_str.lower() in ['none', 'n/a', 'tbd', 'null']:
@@ -93,6 +143,9 @@ def route_message(message):
     # Build routing prompt
     today = datetime.now().date()
 
+    # Build dynamic category context from database
+    category_context = build_category_context()
+
     prompt = f"""You are an intelligent routing assistant for Life OS.
 
 TODAY'S DATE: {today.isoformat()} ({today.strftime('%A, %B %d, %Y')})
@@ -102,59 +155,7 @@ User Message: "{message}"
 {get_tool_prompt()}
 
 Available categories (with subcategories):
-- Buddy: Dog care, health, vet appointments
-- Home: House maintenance, HOA, Brad rent, cleaning, furniture
-- Bills: Bill payments and tracking (reference only)
-- Personal Projects: Life OS, Personal Assistant, NFL for Indians, Podcast, Claude Code
-- Betting: Sports betting, Beat Writer Scraper, betting tracking, active bets
-- Events: Upcoming events, birthdays, important dates
-- Social: Friends visiting, social coordination
-- Tasks: Generic catch-all tasks
-
-**Family** (has subcategories - choose specific group):
-  - Family - Immediate Family: Mom, Dad, Mansi (sister) - bank, passwords, insurance
-  - Family - USA Family: Jay, Aayushi, Surekha Aunty, Suraj - job help, design discussion
-  - Family - India Family: Dadi, Dada, Nani - weekly follow up
-
-**Hobbies** (has subcategories - choose specific hobby):
-  - Hobbies - GYM: Gym workouts, fitness
-  - Hobbies - BJJ: Brazilian Jiu-Jitsu
-  - Hobbies - Video Games: Gaming, Madden, etc.
-  - Hobbies - Television/Movies: TV shows, movies
-  - Hobbies - FOOTBALL: NFL, fantasy football
-  - Hobbies - Photography: Photos, camera
-  - Hobbies - Guitar: Music, guitar playing
-  - Hobbies - Yoga: Yoga practice
-  - Hobbies - Finance: Financial topics, investing
-  - Hobbies - Politics: Political interests
-  - Hobbies - AI: AI topics, learning
-  - Hobbies - Extra-Curricular: Other hobbies
-  - Hobbies - Cricket: Cricket interests
-
-**Wedding** (has subcategories - choose specific area):
-  - Wedding - Vendors: Grove, Pasha, photobooth, invitations
-  - Wedding - Things Needed from Family: Guest list, family coordination
-  - Wedding - Bachelor Party: Planning, Suns game, ATV, coordination
-  - Wedding - Dances: Dance planning
-  - Wedding - Speeches: Speech planning
-  - Wedding - Décor: Clothes, outfits, décor
-  - Wedding - Engagement Pooja: Engagement event planning
-
-**Princeton AI Partners** (has subcategories - choose specific project/client):
-  - Princeton AI - Princeton AI Partners - Princeton-ai.com: Website tasks
-  - Princeton AI - Princeton AI Partners - UpLevel Resume: Client project
-  - Princeton AI - Princeton AI Partners - Hamilton Deli: Client ($50/mo), Akshay
-  - Princeton AI - Princeton AI Partners - Overview: General business, Jasjit, Liji, SELL
-  - Princeton AI - Princeton AI Partners - Generic Tasks: N8N, Mercury, Stripe monitoring
-
-**Notes** (has subcategories):
-  - Notes - General: General notes, reminders
-  - Notes - Quotes: Memorable quotes
-
-**Preeti** (has subcategories - fiancée related):
-  - Preeti - Tasks: Things to do with/for Preeti
-  - Preeti - Notes: Date ideas, thoughts about Preeti
-  - Preeti - Important Events: Events related to Preeti
+{category_context}
 
 Instructions:
 1. Analyze the message and determine which tool to use
@@ -332,6 +333,86 @@ def execute_ask_question(query, query_type='all', filters=None):
         }
 
 
+def execute_log_sleep(hours, date=None, notes=None):
+    """Log sleep hours"""
+    # Default to last night if no date specified
+    if not date:
+        date = (datetime.now() - timedelta(days=1)).date().isoformat()
+
+    # Insert or replace sleep log
+    execute_insert(
+        'INSERT OR REPLACE INTO sleep_logs (date, hours, notes) VALUES (?, ?, ?)',
+        (date, hours, notes)
+    )
+
+    return {
+        'message': f"💤 Logged {hours} hours of sleep for {date}"
+    }
+
+
+def execute_log_water(cups, date=None):
+    """Log water intake"""
+    if not date:
+        date = datetime.now().date().isoformat()
+
+    timestamp = datetime.now().isoformat()
+
+    # Insert water log entry
+    execute_insert(
+        'INSERT INTO water_logs (date, cups, timestamp) VALUES (?, ?, ?)',
+        (date, cups, timestamp)
+    )
+
+    return {
+        'message': f"💧 Logged {cups} cup(s) of water for {date}"
+    }
+
+
+def execute_log_exercise(activity_type, duration_minutes, date=None, notes=None):
+    """Log exercise activity"""
+    if not date:
+        date = datetime.now().date().isoformat()
+
+    execute_insert(
+        'INSERT INTO exercise_logs (date, activity_type, duration_minutes, notes) VALUES (?, ?, ?, ?)',
+        (date, activity_type, duration_minutes, notes)
+    )
+
+    return {
+        'message': f"🏃 Logged {duration_minutes} min of {activity_type} for {date}"
+    }
+
+
+def execute_log_sauna(duration_minutes, num_visits=1, date=None):
+    """Log sauna session"""
+    if not date:
+        date = datetime.now().date().isoformat()
+
+    execute_insert(
+        'INSERT OR REPLACE INTO sauna_logs (date, num_visits, duration_minutes) VALUES (?, ?, ?)',
+        (date, num_visits, duration_minutes)
+    )
+
+    return {
+        'message': f"🧖 Logged sauna session: {duration_minutes} min for {date}"
+    }
+
+
+def execute_log_inbody(weight, smm, pbf, ecw_tbw_ratio, date=None, notes=None):
+    """Log InBody measurements"""
+    if not date:
+        date = datetime.now().date().isoformat()
+
+    execute_insert(
+        'INSERT OR REPLACE INTO inbody_measurements (date, weight, smm, pbf, ecw_tbw_ratio, notes) VALUES (?, ?, ?, ?, ?, ?)',
+        (date, weight, smm, pbf, ecw_tbw_ratio, notes)
+    )
+
+    return {
+        'message': f"📊 InBody logged for {date}:\n  Weight: {weight} lbs\n  SMM: {smm} lbs\n  PBF: {pbf}%\n  ECW/TBW: {ecw_tbw_ratio}"
+    }
+
+
 def main():
     """Main entry point for command-line usage"""
     if len(sys.argv) < 2:
@@ -371,6 +452,49 @@ def main():
                 result['query'],
                 result.get('query_type', 'all'),
                 result.get('filters')
+            )
+            print(f"\n{response['message']}")
+
+        elif result['tool'] == 'log_sleep':
+            response = execute_log_sleep(
+                result['hours'],
+                result.get('date'),
+                result.get('notes')
+            )
+            print(f"\n{response['message']}")
+
+        elif result['tool'] == 'log_water':
+            response = execute_log_water(
+                result['cups'],
+                result.get('date')
+            )
+            print(f"\n{response['message']}")
+
+        elif result['tool'] == 'log_exercise':
+            response = execute_log_exercise(
+                result['activity_type'],
+                result['duration_minutes'],
+                result.get('date'),
+                result.get('notes')
+            )
+            print(f"\n{response['message']}")
+
+        elif result['tool'] == 'log_sauna':
+            response = execute_log_sauna(
+                result['duration_minutes'],
+                result.get('num_visits', 1),
+                result.get('date')
+            )
+            print(f"\n{response['message']}")
+
+        elif result['tool'] == 'log_inbody':
+            response = execute_log_inbody(
+                result['weight'],
+                result['smm'],
+                result['pbf'],
+                result['ecw_tbw_ratio'],
+                result.get('date'),
+                result.get('notes')
             )
             print(f"\n{response['message']}")
 

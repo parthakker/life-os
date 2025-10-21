@@ -7,7 +7,17 @@ import os
 import sys
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from router import route_message, execute_add_task, execute_add_note, execute_ask_question
+from router import (
+    route_message,
+    execute_add_task,
+    execute_add_note,
+    execute_ask_question,
+    execute_log_sleep,
+    execute_log_water,
+    execute_log_exercise,
+    execute_log_sauna,
+    execute_log_inbody
+)
 
 # Telegram bot token - you'll need to create this with @BotFather
 # Set as environment variable: TELEGRAM_BOT_TOKEN
@@ -132,6 +142,49 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 routing_result['query'],
                 routing_result.get('query_type', 'all'),
                 routing_result.get('filters')
+            )
+            await update.message.reply_text(response['message'])
+
+        elif tool == 'log_sleep':
+            response = execute_log_sleep(
+                routing_result['hours'],
+                routing_result.get('date'),
+                routing_result.get('notes')
+            )
+            await update.message.reply_text(response['message'])
+
+        elif tool == 'log_water':
+            response = execute_log_water(
+                routing_result['cups'],
+                routing_result.get('date')
+            )
+            await update.message.reply_text(response['message'])
+
+        elif tool == 'log_exercise':
+            response = execute_log_exercise(
+                routing_result['activity_type'],
+                routing_result['duration_minutes'],
+                routing_result.get('date'),
+                routing_result.get('notes')
+            )
+            await update.message.reply_text(response['message'])
+
+        elif tool == 'log_sauna':
+            response = execute_log_sauna(
+                routing_result['duration_minutes'],
+                routing_result.get('num_visits', 1),
+                routing_result.get('date')
+            )
+            await update.message.reply_text(response['message'])
+
+        elif tool == 'log_inbody':
+            response = execute_log_inbody(
+                routing_result['weight'],
+                routing_result['smm'],
+                routing_result['pbf'],
+                routing_result['ecw_tbw_ratio'],
+                routing_result.get('date'),
+                routing_result.get('notes')
             )
             await update.message.reply_text(response['message'])
 
