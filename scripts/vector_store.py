@@ -14,11 +14,22 @@ from sentence_transformers import SentenceTransformer
 DB_PATH = Path(__file__).parent.parent / 'data.db'
 VECTOR_STORE_PATH = Path(__file__).parent.parent / 'vector_store.json'
 
-# Initialize embedding model (downloads ~90MB first time only)
+# Lazy load embedding model (only loads when needed, not on import)
 # all-MiniLM-L6-v2: Fast, lightweight, perfect for short texts
-print("[Vector Store] Loading embedding model...")
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-print("[Vector Store] Model loaded successfully")
+_embedding_model = None
+
+def get_embedding_model():
+    """
+    Lazy load the embedding model (only loads on first use)
+    This prevents loading 90MB+ model on bot startup
+    Model is cached after first load for subsequent use
+    """
+    global _embedding_model
+    if _embedding_model is None:
+        print("[Vector Store] Loading embedding model (first use)...")
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("[Vector Store] Model loaded successfully")
+    return _embedding_model
 
 
 def vectorize_all_data(force=False):
@@ -75,7 +86,7 @@ def vectorize_all_data(force=False):
             embedding_text += f" (due: {due_date})"
 
         # Generate embedding
-        embedding = embedding_model.encode(embedding_text).tolist()
+        embedding = get_embedding_model().encode(embedding_text).tolist()
 
         vector_store['items'].append({
             'id': f"task_{task_id}",
@@ -96,7 +107,7 @@ def vectorize_all_data(force=False):
         embedding_text = f"{category}: {content}"
 
         # Generate embedding
-        embedding = embedding_model.encode(embedding_text).tolist()
+        embedding = get_embedding_model().encode(embedding_text).tolist()
 
         vector_store['items'].append({
             'id': f"note_{note_id}",
@@ -158,7 +169,7 @@ def search_memory(query, n_results=5, filters=None):
 
     # Vectorize query
     print(f"[Search] Vectorizing query: '{query}'")
-    query_embedding = embedding_model.encode(query).tolist()
+    query_embedding = get_embedding_model().encode(query).tolist()
 
     # Calculate similarities for all items
     results = []
