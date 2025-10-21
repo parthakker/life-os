@@ -3,7 +3,7 @@
  * Displays a list of tasks with filtering and CRUD operations
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   useTasksQuery,
@@ -17,7 +17,10 @@ import type { Task } from '@/lib/api';
 import { TaskCard } from './TaskCard';
 import { TaskEditDialog } from './TaskEditDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Loader2, Search, SlidersHorizontal, CheckCircle2, Circle, Clock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,10 +33,16 @@ interface TaskListProps {
   categoryId?: number | null;
 }
 
+type SortOption = 'due_date' | 'created_date' | 'alphabetical';
+type GroupOption = 'none' | 'category' | 'status';
+
 export function TaskList({ categoryId }: TaskListProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [completedFilter, setCompletedFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('due_date');
+  const [groupBy, setGroupBy] = useState<GroupOption>('none');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch categories for the dialog
   const { data: categories = [] } = useQuery({
@@ -53,6 +62,81 @@ export function TaskList({ categoryId }: TaskListProps) {
 
   // Fetch tasks with filters
   const { data: tasks = [], isLoading, error } = useTasksQuery(filters);
+
+  // Filter, sort, and group tasks
+  const processedTasks = useMemo(() => {
+    let filtered = [...tasks];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((task) =>
+        task.content.toLowerCase().includes(query) ||
+        task.category_name?.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort tasks
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'due_date':
+          // Put tasks without due date at the end
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+
+        case 'created_date':
+          return new Date(b.created_date).getTime() - new Date(a.created_date).getTime();
+
+        case 'alphabetical':
+          return a.content.localeCompare(b.content);
+
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [tasks, searchQuery, sortBy]);
+
+  // Group tasks if needed
+  const groupedTasks = useMemo(() => {
+    if (groupBy === 'none') {
+      return { 'All Tasks': processedTasks };
+    }
+
+    if (groupBy === 'category') {
+      const groups: Record<string, Task[]> = {};
+      processedTasks.forEach((task) => {
+        const category = task.category_name || 'Uncategorized';
+        if (!groups[category]) groups[category] = [];
+        groups[category].push(task);
+      });
+      return groups;
+    }
+
+    if (groupBy === 'status') {
+      return {
+        'Open': processedTasks.filter((t) => !t.completed),
+        'Completed': processedTasks.filter((t) => t.completed),
+      };
+    }
+
+    return { 'All Tasks': processedTasks };
+  }, [processedTasks, groupBy]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = processedTasks.length;
+    const completed = processedTasks.filter((t) => t.completed).length;
+    const pending = total - completed;
+    const overdue = processedTasks.filter((t) =>
+      !t.completed && t.due_date && new Date(t.due_date) < new Date()
+    ).length;
+
+    return { total, completed, pending, overdue };
+  }, [processedTasks]);
 
   // Mutations
   const toggleCompletion = useToggleTaskCompletion();
@@ -117,22 +201,95 @@ export function TaskList({ categoryId }: TaskListProps) {
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4">
-        <Select value={completedFilter} onValueChange={setCompletedFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Tasks" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="false">Active</SelectItem>
-            <SelectItem value="true">Completed</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Statistics Cards */}
+      {!isLoading && tasks.length > 0 && (
+        <div className="grid grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs">Total Tasks</CardDescription>
+              <CardTitle className="text-2xl">{stats.total}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs flex items-center gap-1">
+                <Circle className="h-3 w-3" /> Pending
+              </CardDescription>
+              <CardTitle className="text-2xl">{stats.pending}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Completed
+              </CardDescription>
+              <CardTitle className="text-2xl">{stats.completed}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs flex items-center gap-1">
+                <Clock className="h-3 w-3 text-destructive" /> Overdue
+              </CardDescription>
+              <CardTitle className="text-2xl text-destructive">{stats.overdue}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
+
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Filter Controls */}
+        <div className="flex gap-4 flex-wrap">
+          <Select value={completedFilter} onValueChange={setCompletedFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="false">Active</SelectItem>
+              <SelectItem value="true">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="due_date">Due Date</SelectItem>
+              <SelectItem value="created_date">Created Date</SelectItem>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={groupBy} onValueChange={(val) => setGroupBy(val as GroupOption)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Group by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Grouping</SelectItem>
+              <SelectItem value="category">By Category</SelectItem>
+              <SelectItem value="status">By Status</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Task List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -144,20 +301,39 @@ export function TaskList({ categoryId }: TaskListProps) {
               Retry
             </Button>
           </div>
-        ) : tasks.length === 0 ? (
+        ) : processedTasks.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg">No tasks found</p>
-            <p className="text-sm mt-2">Create your first task to get started!</p>
+            <p className="text-lg">
+              {searchQuery ? 'No tasks match your search' : 'No tasks found'}
+            </p>
+            <p className="text-sm mt-2">
+              {searchQuery ? 'Try a different search term' : 'Create your first task to get started!'}
+            </p>
           </div>
         ) : (
-          tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onToggleComplete={handleToggleComplete}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+          Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
+            <div key={groupName} className="space-y-4">
+              {/* Group Header */}
+              {groupBy !== 'none' && (
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold">{groupName}</h2>
+                  <Badge variant="secondary">{groupTasks.length}</Badge>
+                </div>
+              )}
+
+              {/* Tasks in Group */}
+              <div className="space-y-3">
+                {groupTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggleComplete={handleToggleComplete}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </div>
           ))
         )}
       </div>
