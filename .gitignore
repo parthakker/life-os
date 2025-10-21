@@ -51,11 +51,19 @@ old-data-*/
 archive-old-implementation/
 
 # Agent logs (may contain sensitive info)
-.agent/logs/
+.agent/logs/session-*.md
+# But include progress reports
+!.agent/logs/phase-*-progress.md
 
 # Personal learning notes (private)
 Parth_Learning_Databases.md
+Understanding_AI_Architecture_Patterns.md
 
 # Test files
 test_*.py
 *_test.py
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
