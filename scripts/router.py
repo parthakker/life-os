@@ -197,8 +197,12 @@ Available categories (with subcategories):
 Instructions:
 1. Analyze the message and determine which tool to use
 2. If add_task or add_note: Extract category and content
+   - For categories with subcategories (marked with **), MUST choose a specific subcategory like "Wedding - Vendors"
+   - For leaf categories, use the name directly
 3. If add_task: Also parse due date if mentioned
 4. If ask_question: Extract query details and filters
+   - For category filter, you CAN use parent categories like "Wedding" to search all subcategories
+   - OR use specific subcategories like "Wedding - Vendors" for narrower searches
 
 Output Format Examples:
 
@@ -223,11 +227,16 @@ For ask_question:
   "query": "user's question",
   "query_type": "tasks or notes or all",
   "filters": {{
-    "category": "category name or null",
+    "category": "category name or null (can be parent like 'Wedding' or specific like 'Wedding - Vendors')",
     "time_range": "today or week or all",
     "status": "open or completed or all"
   }}
 }}
+
+Examples of category usage in ask_question:
+- "what are my wedding tasks" → filters: {{"category": "Wedding"}} (searches ALL wedding subcategories)
+- "what are my vendor tasks" → filters: {{"category": "Wedding - Vendors"}} (searches only vendors)
+- "show me home tasks" → filters: {{"category": "Home"}} (leaf category)
 
 Return ONLY valid JSON, nothing else:
 """
