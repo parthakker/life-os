@@ -242,8 +242,8 @@ def add_to_vector_store(item_id, item_type, category, content, **kwargs):
     if item_type == 'task' and kwargs.get('due_date'):
         embedding_text += f" (due: {kwargs['due_date']})"
 
-    # Generate embedding
-    embedding = embedding_model.encode(embedding_text).tolist()
+    # Generate embedding via OpenAI API
+    embedding = get_embedding(embedding_text)
 
     # Create item
     new_item = {
