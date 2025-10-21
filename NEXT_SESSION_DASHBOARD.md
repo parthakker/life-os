@@ -1,8 +1,20 @@
 # Next Session: Dashboard Development (Phase 2D)
 
 **Date Created:** October 21, 2025
-**Status:** 🎯 Ready to Start
+**Updated:** October 21, 2025 (User preferences confirmed!)
+**Status:** ✅ Ready to Start - All decisions made
 **Priority:** High - User Interface for Life OS v1.0
+
+---
+
+## ✅ User Confirmed Approach
+
+1. **Calendar:** Include UI placeholder (ready for Phase 2B)
+2. **Priority:** Tasks first (Day 1), then Notes (Day 2)
+3. **Database:** Shared data.db with Telegram bot ✅
+4. **Authentication:** No login needed - local only
+
+**See `Parth_Learning_Databases.md` for detailed explanation of how SQLite works!**
 
 ---
 

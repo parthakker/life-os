@@ -53,6 +53,9 @@ archive-old-implementation/
 # Agent logs (may contain sensitive info)
 .agent/logs/
 
+# Personal learning notes (private)
+Parth_Learning_Databases.md
+
 # Test files
 test_*.py
 *_test.py
