@@ -2,10 +2,9 @@
 python-telegram-bot==21.0
 anthropic==0.71.0
 
-# Vector embeddings
-sentence-transformers==3.3.1
-torch==2.5.1
-numpy==2.0.2
+# Vector embeddings via OpenAI API
+openai>=1.55.3  # Latest version, fixes httpx proxies error
+numpy==2.0.2  # Still needed for cosine similarity
 
 # Database
 # SQLite is built into Python - no installation needed

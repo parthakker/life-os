@@ -1,6 +1,6 @@
 """
 Custom Vector Store for Life OS RAG
-Lightweight implementation using sentence-transformers + JSON storage
+Lightweight implementation using OpenAI Embeddings API + JSON storage
 """
 
 import os
@@ -9,27 +9,42 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 
 DB_PATH = Path(__file__).parent.parent / 'data.db'
 VECTOR_STORE_PATH = Path(__file__).parent.parent / 'vector_store.json'
 
-# Lazy load embedding model (only loads when needed, not on import)
-# all-MiniLM-L6-v2: Fast, lightweight, perfect for short texts
-_embedding_model = None
+# OpenAI API configuration
+# text-embedding-3-small: High quality, low cost ($0.02/1M tokens)
+# Using 384 dimensions to match previous all-MiniLM-L6-v2 model
 
-def get_embedding_model():
+def get_embedding(text):
     """
-    Lazy load the embedding model (only loads on first use)
-    This prevents loading 90MB+ model on bot startup
-    Model is cached after first load for subsequent use
+    Get embedding from OpenAI API
+    Uses text-embedding-3-small with 384 dimensions
+
+    Args:
+        text: Text to embed
+
+    Returns:
+        List of floats (384 dimensions)
     """
-    global _embedding_model
-    if _embedding_model is None:
-        print("[Vector Store] Loading embedding model (first use)...")
-        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("[Vector Store] Model loaded successfully")
-    return _embedding_model
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise Exception("OPENAI_API_KEY environment variable not set")
+
+    client = OpenAI(api_key=api_key)
+
+    try:
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text,
+            dimensions=384  # Match old model dimensions for compatibility
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"[Vector Store] Error getting embedding from OpenAI: {e}")
+        raise
 
 
 def vectorize_all_data(force=False):
@@ -71,7 +86,8 @@ def vectorize_all_data(force=False):
     vector_store = {
         'metadata': {
             'created_at': datetime.now().isoformat(),
-            'model': 'all-MiniLM-L6-v2',
+            'model': 'text-embedding-3-small',
+            'provider': 'openai',
             'dimensions': 384,
             'total_items': len(tasks) + len(notes)
         },
@@ -85,8 +101,8 @@ def vectorize_all_data(force=False):
         if due_date:
             embedding_text += f" (due: {due_date})"
 
-        # Generate embedding
-        embedding = get_embedding_model().encode(embedding_text).tolist()
+        # Generate embedding via OpenAI API
+        embedding = get_embedding(embedding_text)
 
         vector_store['items'].append({
             'id': f"task_{task_id}",
@@ -106,8 +122,8 @@ def vectorize_all_data(force=False):
         # Create rich text for better embeddings
         embedding_text = f"{category}: {content}"
 
-        # Generate embedding
-        embedding = get_embedding_model().encode(embedding_text).tolist()
+        # Generate embedding via OpenAI API
+        embedding = get_embedding(embedding_text)
 
         vector_store['items'].append({
             'id': f"note_{note_id}",
@@ -167,9 +183,9 @@ def search_memory(query, n_results=5, filters=None):
     with open(VECTOR_STORE_PATH, 'r', encoding='utf-8') as f:
         vector_store = json.load(f)
 
-    # Vectorize query
+    # Vectorize query via OpenAI API
     print(f"[Search] Vectorizing query: '{query}'")
-    query_embedding = get_embedding_model().encode(query).tolist()
+    query_embedding = get_embedding(query)
 
     # Calculate similarities for all items
     results = []
