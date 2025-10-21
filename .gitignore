@@ -56,6 +56,7 @@ archive-old-implementation/
 # But include progress reports and major session summaries
 !.agent/logs/phase-*-progress.md
 !.agent/logs/session-2025-10-21-health-tracking.md
+!.agent/logs/session-2025-10-21-wedding-search-fix.md
 
 # Personal learning notes (private)
 Parth_Learning_Databases.md
