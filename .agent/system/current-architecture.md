@@ -172,6 +172,16 @@ Render Service (srv-d3r6u5ogjchc73bsiibg)
 - Unified search across tasks/notes/events
 - Date range filtering
 
+**Phase 2D: Dashboard with React + shadcn/ui (Week 2-3)** 🆕
+- Clean, modern web dashboard for visual data management
+- View all tasks, notes, and calendar events
+- Full CRUD operations (create, edit, delete, complete)
+- Move tasks/notes between categories
+- Semantic search via RAG
+- Flask REST API backend
+- Shared SQLite database with Telegram bot
+- shadcn/ui component library for modern UI
+
 **Phase 3B: Intelligent Import - Images/PDFs (Week 3-4)**
 - Forward vendor contracts → extract events
 - Screenshot event flyers → auto-schedule

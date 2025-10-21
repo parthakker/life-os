@@ -1,12 +1,17 @@
 # Life OS Roadmap: Phases 2B-4
 
 **Created:** October 19, 2025
+**Updated:** October 21, 2025 (Added Phase 2D - Dashboard)
 **Status:** Planning
-**Current Phase:** 2A Complete (RAG System deployed)
+**Current Phase:** 2A Complete (v1.0 Production Ready)
 
 ## Overview
 
-This document outlines the feature roadmap for Life OS from basic calendar integration through advanced intelligent import capabilities.
+This document outlines the feature roadmap for Life OS from calendar integration and visual dashboard through advanced intelligent import capabilities.
+
+**Phase 2 Focus:** Calendar Integration + Dashboard UI
+**Phase 3 Focus:** Intelligent Import (Images, PDFs, Web Links)
+**Phase 4 Focus:** Advanced Features & Sharing
 
 ---
 
@@ -186,6 +191,294 @@ Bot: 🔍 Found 15 results:
      📅 [Wedding] Cake tasting - April 3, 2026 at 3:00 PM
      📅 [Wedding] Final fitting - April 20, 2026 at 11:00 AM
 ```
+
+---
+
+## Phase 2D: Dashboard with React + shadcn/ui
+
+**Timeline:** Week 2-3 (2-3 days)
+**Status:** Planned
+**Priority:** HIGH - Visual interface for data management
+
+### Goals
+
+Build a clean, modern web dashboard using React.js and shadcn/ui to provide visual access to all Life OS data with full CRUD capabilities.
+
+### Features
+
+1. **View All Data**
+   - Display all tasks with filters
+   - Display all notes with category organization
+   - Display calendar events in calendar view
+   - Search functionality (semantic via RAG)
+   - Filter by category, date, completion status
+
+2. **Task Management**
+   - Mark tasks as complete/incomplete
+   - Edit task content, due dates, categories
+   - Delete tasks
+   - Move tasks between categories
+   - Create new tasks
+
+3. **Note Management**
+   - View all notes organized by category
+   - Edit note content and categories
+   - Delete notes
+   - Move notes between categories
+   - Create new notes
+
+4. **Calendar View**
+   - Visual month/week view
+   - Display Google Calendar events
+   - Create new events from dashboard
+   - Edit existing events
+   - Integrated with Phase 2B calendar features
+
+5. **Modern UI/UX**
+   - Clean, minimal design using shadcn/ui components
+   - Responsive layout (desktop & mobile)
+   - Customizable views and filters
+   - Smooth, interactive experience
+   - Fast loading (<1 second)
+
+### Technical Implementation
+
+**Frontend Stack:**
+```
+React.js (with Vite)
++ shadcn/ui (component library)
++ Tailwind CSS (styling)
++ TypeScript (type safety)
++ React Query (data fetching)
+```
+
+**Backend API:**
+```python
+# New file: scripts/api_server.py
+Flask REST API with endpoints:
+
+Tasks:
+  GET    /api/tasks           - List all tasks
+  GET    /api/tasks/:id       - Get single task
+  POST   /api/tasks           - Create task
+  PUT    /api/tasks/:id       - Update task
+  DELETE /api/tasks/:id       - Delete task
+  PATCH  /api/tasks/:id/complete  - Toggle completion
+
+Notes:
+  GET    /api/notes           - List all notes
+  GET    /api/notes/:id       - Get single note
+  POST   /api/notes           - Create note
+  PUT    /api/notes/:id       - Update note
+  DELETE /api/notes/:id       - Delete note
+
+Calendar:
+  GET    /api/calendar/events - List events (via Google Calendar MCP)
+  POST   /api/calendar/events - Create event
+  PUT    /api/calendar/events/:id  - Update event
+  DELETE /api/calendar/events/:id  - Delete event
+
+Search:
+  GET    /api/search?q=query  - Semantic search via RAG system
+
+Categories:
+  GET    /api/categories      - List all 41 categories
+```
+
+**Database Integration:**
+- Reuse existing `data.db` SQLite database
+- Shared between Telegram bot and dashboard
+- Use existing `db.py` functions
+- Auto-vectorization on create/update (maintain RAG sync)
+
+**Project Structure:**
+```
+life-os/
+├── frontend/                # New React dashboard
+│   ├── src/
+│   │   ├── components/     # shadcn/ui components
+│   │   │   ├── ui/         # shadcn primitives
+│   │   │   ├── TaskList.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── NoteList.tsx
+│   │   │   ├── Calendar.tsx
+│   │   │   └── SearchBar.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Tasks.tsx
+│   │   │   ├── Notes.tsx
+│   │   │   └── Calendar.tsx
+│   │   ├── lib/
+│   │   │   └── api.ts      # API client
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── scripts/
+│   ├── api_server.py       # NEW: Flask REST API
+│   ├── telegram_bot.py     # Existing
+│   ├── router.py           # Existing
+│   └── ...
+```
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│         User Interfaces                     │
+│                                             │
+│  ┌──────────────┐      ┌─────────────────┐ │
+│  │   Telegram   │      │ React Dashboard │ │
+│  │     Bot      │      │  (shadcn/ui)    │ │
+│  └──────┬───────┘      └────────┬────────┘ │
+│         │                       │          │
+│         v                       v          │
+│  ┌──────────────┐      ┌─────────────────┐ │
+│  │  telegram_   │      │  Flask REST     │ │
+│  │    bot.py    │      │     API         │ │
+│  └──────┬───────┘      └────────┬────────┘ │
+│         │                       │          │
+│         └───────┬───────────────┘          │
+│                 v                          │
+│         ┌──────────────┐                   │
+│         │   router.py  │                   │
+│         │  (Agentic)   │                   │
+│         └──────┬───────┘                   │
+│                v                           │
+│    ┌──────────────────────┐                │
+│    │  Database & Vector   │                │
+│    │      Store           │                │
+│    │                      │                │
+│    │  • data.db (SQLite)  │                │
+│    │  • vector_store.json │                │
+│    │  • OpenAI Embeddings │                │
+│    └──────────────────────┘                │
+└─────────────────────────────────────────────┘
+```
+
+### Success Criteria
+
+✅ Dashboard loads and displays all tasks/notes
+✅ Can create, edit, delete tasks and notes
+✅ Can mark tasks as complete/incomplete
+✅ Can move tasks/notes between categories
+✅ Calendar view shows Google Calendar events
+✅ Can create/edit calendar events from dashboard
+✅ Search works (semantic via RAG)
+✅ Clean, modern UI using shadcn/ui
+✅ Responsive design works on desktop
+✅ Changes sync with Telegram bot (shared DB)
+✅ Auto-vectorization maintains RAG index
+
+### User Experience
+
+**Dashboard Layout:**
+```
+┌─────────────────────────────────────────────┐
+│ Life OS Dashboard    [Search...]  [@User]   │
+├──────────┬──────────────────────────────────┤
+│          │                                   │
+│ 📋 Tasks │  Today's Tasks (5)               │
+│ 📝 Notes │  ┌────────────────────────────┐  │
+│ 📅 Calendar│ │ ☐ Buy groceries        [Edit]│ │
+│ 🔍 Search│  │   📁 Preeti  📅 ASAP       │  │
+│          │  └────────────────────────────┘  │
+│ Filter:  │                                   │
+│ [All] ▾  │  Recent Notes (3)                │
+│          │  ┌────────────────────────────┐  │
+│          │  │ Wedding vendor notes   [Edit]│ │
+│          │  │ 📁 Wedding Planning        │  │
+│          │  └────────────────────────────┘  │
+└──────────┴──────────────────────────────────┘
+```
+
+### Design Principles
+
+- **Very Simple:** No feature bloat, core functionality only
+- **Clean & Modern:** shadcn/ui aesthetic throughout
+- **Customizable:** User can adjust views, filters, themes
+- **Interactive:** Smooth animations, instant feedback
+- **Responsive:** Works on all screen sizes
+
+### Example Usage
+
+**Viewing Tasks:**
+- User opens dashboard
+- Sees all tasks organized by category
+- Can filter by "Today", "This Week", "Overdue"
+- Click task to edit inline or in modal
+
+**Managing a Task:**
+- Click "Buy groceries" task
+- Edit modal opens
+- Change due date from "ASAP" to "Tomorrow 5pm"
+- Move from "Preeti - Tasks" to "Home - Errands"
+- Click save
+- Task updates in DB + auto-vectorizes
+- Change visible immediately
+
+**Calendar View:**
+- Switch to Calendar tab
+- Month view shows all events
+- Click empty day to create new event
+- "Dinner with mom - Friday 7pm"
+- Event syncs to Google Calendar
+- Appears in both dashboard and Telegram bot
+
+### Development Timeline
+
+**Day 1:**
+- Set up React + Vite + shadcn/ui
+- Build Flask API with task endpoints
+- Create TaskList and TaskCard components
+- Basic CRUD for tasks working
+
+**Day 2:**
+- Add note management
+- Add calendar integration
+- Build search functionality
+- Polish UI/UX
+
+**Day 3:**
+- Add category management
+- Add filters and sorting
+- Mobile responsive design
+- Testing and bug fixes
+- Documentation
+
+### Dependencies
+
+**New:**
+- Node.js and npm
+- React + Vite + TypeScript
+- shadcn/ui + Tailwind CSS
+- React Query
+
+**Existing:**
+- Flask (already in requirements.txt)
+- SQLite database
+- Vector store system
+- Google Calendar MCP (from Phase 2B)
+
+### Future Enhancements (Post-Phase 2D)
+
+- Dark mode toggle
+- Bulk operations (complete multiple tasks)
+- Drag-and-drop for reordering
+- Export to CSV/PDF
+- Dashboard analytics/stats
+- Shared calendars for Judy (Phase 4)
+
+### Notes
+
+- Dashboard is **enhancement**, not replacement
+- Telegram bot remains primary interface for quick capture
+- Dashboard for when user wants visual overview and management
+- Both interfaces share same database (SQLite)
+- Changes sync automatically
+- Deploy dashboard (optional): Vercel or Netlify for frontend
+- API can run on Render alongside Telegram bot
 
 ---
 
