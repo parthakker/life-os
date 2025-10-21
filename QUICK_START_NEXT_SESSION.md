@@ -1,11 +1,26 @@
 # Quick Start - After OpenAI Migration
 
-**Last Updated:** October 20, 2025 - 9:00 PM
-**Status:** 🎉 OPENAI MIGRATION COMPLETE - Ready for testing!
+**Last Updated:** October 20, 2025 - 10:30 PM
+**Status:** 🔧 CRITICAL BUG FIXED - Deployment in progress
 
 ---
 
-## 🎯 What Just Happened
+## 🚨 CRITICAL BUG FIX (Just Now)
+
+**Bug Found:** The `add_to_vector_store()` function in scripts/vector_store.py was never updated during migration!
+- Line 246 still had: `embedding = embedding_model.encode(embedding_text).tolist()` (OLD CODE)
+- Should be: `embedding = get_embedding(embedding_text)` (NEW CODE)
+
+**This was causing:** All the "embedding_model is not defined" errors when auto-vectorizing new tasks/notes!
+
+**Fix Applied:**
+- Commit e00eb6c pushed to GitHub
+- Render should auto-deploy in ~2-3 minutes
+- This was the missing piece!
+
+---
+
+## 🎯 What Happened This Session
 
 **MAJOR UPGRADE: Switched from torch to OpenAI Embeddings API**
 
@@ -29,9 +44,41 @@
 
 ---
 
-## 🧪 IMMEDIATE: Test the Deployment (5 minutes)
+## ✅ VERIFICATION CHECKLIST (Do This Now)
 
-### Step 1: Check Render Logs
+### Step 0: Wait for Deployment (2-3 minutes)
+
+Render should be auto-deploying commit `e00eb6c` right now.
+
+**Check in Render Dashboard:**
+- Go to: https://dashboard.render.com → srv-d3r9ocbe5dus73b4vs4g
+- Look for: "Deploy live" notification
+- Wait until: Status shows "Live" (green)
+
+---
+
+## 🧪 STEP-BY-STEP: Verify Everything Works
+
+### Step 1: Check Render Build Logs (CRITICAL)
+
+**Go to:** https://dashboard.render.com → srv-d3r9ocbe5dus73b4vs4g → Events
+
+**Look for latest deploy (commit e00eb6c):**
+```
+✓ Installing dependencies from requirements.txt
+✓ Collecting openai>=1.55.3
+✓ Installing openai-X.X.X
+```
+
+**MUST NOT see:**
+- ❌ "Collecting torch"
+- ❌ "Collecting sentence-transformers"
+
+If you see torch installing, the cache didn't clear properly!
+
+---
+
+### Step 2: Check Application Logs
 
 **Go to:** https://dashboard.render.com → srv-d3r9ocbe5dus73b4vs4g → Logs
 
@@ -46,47 +93,68 @@
 **Success indicators:**
 - ✅ "Bot is running!" appears
 - ✅ NO "Out of memory" errors
-- ✅ NO "[Vector Store] Loading embedding model..." (no local model!)
+- ✅ NO "embedding_model is not defined" errors
 - ✅ Service stays up (no restart loop)
+- ✅ Memory usage shows ~100-150MB (check Metrics tab)
 
 **If you see errors:**
-- Check OPENAI_API_KEY is set correctly
-- Check for any import errors
-- Message me with error details
+- "401 Unauthorized" → Check OPENAI_API_KEY matches new key
+- "embedding_model is not defined" → Old code still deployed, clear cache again
+- "Out of memory" → torch is still installing, contact me
 
 ---
 
-### Step 2: Test via Telegram (3 tests)
+### Step 3: Test via Telegram (4 CRITICAL tests)
 
-**Test A: Add a Task (No model needed)**
-```
-Send: "buy milk tomorrow"
+Open Telegram and message your Life OS bot (@LifeOSPreeti_bot)
 
-Expected response:
-✓ Task added to Preeti - Tasks
-Content: Buy milk
-Due: 2025-10-21
-ID: 168
+**Test A: Basic Task (No OpenAI needed)**
 ```
-
-**Test B: Ask a Question (OpenAI API call)**
-```
-Send: "what are my wedding tasks"
+Send: "test openai migration complete"
 
 Expected:
-- Takes ~2-3 seconds (OpenAI API call)
-- Returns relevant wedding tasks
-- Check Render logs: Should see "[Search] Vectorizing query..."
+✓ Task added to [category]
+Content: test openai migration complete
+Due: [date]
+ID: [number]
+
+Check Render logs: Should see task added, NO errors
 ```
 
-**Test C: Add Another Task (Auto-vectorization)**
+**Test B: RAG Search (OpenAI API call #1)**
 ```
-Send: "call mom next week"
+Send: "show me my preeti tasks"
+
+Expected:
+- Takes 2-3 seconds (OpenAI API query)
+- Returns relevant results
+- Check Render logs:
+  ✓ "[Search] Vectorizing query: 'show me my preeti tasks'"
+  ✓ "[Search] Found X results"
+  ✓ NO "401 Unauthorized"
+  ✓ NO "embedding_model is not defined"
+```
+
+**Test C: Add Task with Auto-Vectorization (OpenAI API call #2)**
+```
+Send: "remind me to call mom tomorrow"
 
 Expected:
 - Task added successfully
-- Auto-vectorized via OpenAI API
-- Immediately searchable
+- Check Render logs:
+  ✓ Should see auto-vectorization happening
+  ✓ Should call get_embedding() without errors
+  ✓ "[Vector Store] Added task_XXX to vector store"
+```
+
+**Test D: Search for New Task (Verify Auto-Vectorization Worked)**
+```
+Send: "do I need to call anyone"
+
+Expected:
+- Returns the "call mom" task we just added
+- Proves auto-vectorization worked
+- Proves the bug fix worked!
 ```
 
 ---
@@ -309,7 +377,10 @@ User → Telegram → Router → Task/Note added
 - `1dc821e` - OpenAI vector store upload
 
 **Cleanup:**
-- (Next commit) - Re-gitignore vector store + docs
+- `cf76542` - Post-migration cleanup and documentation
+
+**CRITICAL BUG FIX:**
+- `e00eb6c` - Fix add_to_vector_store() to use OpenAI API (THIS WAS THE ISSUE!)
 
 ---
 
