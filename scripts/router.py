@@ -15,7 +15,7 @@ from db_helper import execute_query, execute_insert
 
 
 def get_category_id(category_name):
-    """Get category ID from database by name (case-insensitive, partial match)"""
+    """Get category ID from database by name (case-insensitive, hierarchical match)"""
     # Try exact match first
     result = execute_query(
         'SELECT id FROM categories WHERE LOWER(name) = LOWER(?)',
@@ -23,15 +23,52 @@ def get_category_id(category_name):
         fetch='one'
     )
 
-    if not result:
-        # Try partial match (e.g., "Wedding" matches "Wedding - Vendors")
+    if result:
+        return result['id']
+
+    # If no exact match, try hierarchical lookup
+    # E.g., "Wedding - Vendors" should find category "Vendors" with parent "Wedding"
+    if ' - ' in category_name:
+        parts = category_name.split(' - ')
+
+        # Try to find the child category with the correct parent chain
+        # Start from the end (most specific category)
+        child_name = parts[-1]
+
+        # If there's a parent specified
+        if len(parts) > 1:
+            parent_name = parts[-2]  # Immediate parent
+
+            # Find child category with matching parent
+            result = execute_query('''
+                SELECT c.id
+                FROM categories c
+                JOIN categories p ON c.parent_id = p.id
+                WHERE LOWER(c.name) = LOWER(?)
+                AND LOWER(p.name) = LOWER(?)
+            ''', (child_name, parent_name), fetch='one')
+
+            if result:
+                return result['id']
+
+        # Try just the child name (last part) as fallback
         result = execute_query(
-            'SELECT id FROM categories WHERE LOWER(name) LIKE LOWER(?)',
-            (f'%{category_name}%',),
+            'SELECT id FROM categories WHERE LOWER(name) = LOWER(?)',
+            (child_name,),
             fetch='one'
         )
 
-    return result[0] if result else None
+        if result:
+            return result['id']
+
+    # Last resort: partial match (e.g., "Wedding" matches "Wedding - Vendors")
+    result = execute_query(
+        'SELECT id FROM categories WHERE LOWER(name) LIKE LOWER(?)',
+        (f'%{category_name}%',),
+        fetch='one'
+    )
+
+    return result['id'] if result else None
 
 
 def get_category_name(category_id):
@@ -42,7 +79,7 @@ def get_category_name(category_id):
         fetch='one'
     )
 
-    return result[0] if result else None
+    return result['name'] if result else None
 
 
 def build_category_context():
