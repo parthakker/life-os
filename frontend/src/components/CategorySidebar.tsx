@@ -37,7 +37,7 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
     <button
       onClick={() => !editMode && onSelect(category.id)}
       className={cn(
-        "w-full flex items-center gap-2 px-3 py-2 pr-14 text-sm rounded-md transition-colors",
+        "w-full flex items-center gap-2 px-3 py-2 pr-20 text-sm rounded-md transition-colors",
         isSelected && !editMode
           ? "bg-accent text-accent-foreground"
           : "hover:bg-accent/50",
@@ -108,14 +108,14 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
       )}
 
       {/* Badges - absolutely positioned on the right */}
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none">
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1.5 pointer-events-none">
         {taskCounts[category.id] > 0 && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+          <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
             {taskCounts[category.id]}
           </span>
         )}
         {noteCounts[category.id] > 0 && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
+          <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
             {noteCounts[category.id]}
           </span>
         )}
@@ -259,7 +259,7 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
           <button
             onClick={handleShowAll}
             className={cn(
-              "w-full flex items-center gap-2 px-3 py-2 pr-14 text-sm rounded-md transition-colors",
+              "w-full flex items-center gap-2 px-3 py-2 pr-20 text-sm rounded-md transition-colors",
               selectedCategoryId === null
                 ? "bg-accent text-accent-foreground"
                 : "hover:bg-accent/50"
@@ -269,14 +269,14 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
             <Folder className="h-4 w-4" />
             <span>All</span>
           </button>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1.5 pointer-events-none">
             {totalActiveTasks > 0 && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+              <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
                 {totalActiveTasks}
               </span>
             )}
             {totalNotes > 0 && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
+              <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
                 {totalNotes}
               </span>
             )}
