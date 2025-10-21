@@ -2,7 +2,7 @@ services:
   - type: worker
     name: life-os-bot
     runtime: python
-    plan: standard
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python scripts/telegram_bot.py
     envVars:
