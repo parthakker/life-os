@@ -163,6 +163,61 @@ def cosine_similarity(vec1, vec2):
     return dot_product / (norm1 * norm2)
 
 
+def category_matches(filter_category, item_category):
+    """
+    Flexible category matching with word-level comparison
+
+    Handles:
+    - Exact substring: "Wedding" matches "Wedding - Vendors"
+    - Word boundaries: "Vendor" matches "Wedding - Vendors"
+    - Singular/plural: "Vendor" matches "Vendors"
+    - Separators: "Wedding Vendor" matches "Wedding - Vendors"
+
+    Args:
+        filter_category: Category filter from user query
+        item_category: Category name from vector store item
+
+    Returns:
+        True if categories match, False otherwise
+    """
+    filter_lower = filter_category.lower()
+    item_lower = item_category.lower()
+
+    # Strategy 1: Exact substring match (fast path)
+    if filter_lower in item_lower:
+        return True
+
+    # Strategy 2: Word-level matching (handles separators and word boundaries)
+    # Extract words from both (removing separators like " - ", "/", etc.)
+    import re
+    filter_words = re.findall(r'\w+', filter_lower)
+    item_words = re.findall(r'\w+', item_lower)
+
+    # Check if all filter words appear in item words (with plural handling)
+    for filter_word in filter_words:
+        # Check for exact match or singular/plural variants
+        matched = False
+        for item_word in item_words:
+            # Exact match
+            if filter_word == item_word:
+                matched = True
+                break
+            # Plural match (vendor -> vendors, task -> tasks)
+            if filter_word + 's' == item_word or filter_word == item_word + 's':
+                matched = True
+                break
+            # Stemming-like match (checking if one is prefix of other, min 4 chars)
+            if len(filter_word) >= 4 and len(item_word) >= 4:
+                if filter_word.startswith(item_word[:4]) or item_word.startswith(filter_word[:4]):
+                    matched = True
+                    break
+
+        if not matched:
+            return False
+
+    return True
+
+
 def search_memory(query, n_results=5, filters=None):
     """
     Search vector store for similar items
@@ -193,7 +248,7 @@ def search_memory(query, n_results=5, filters=None):
         # Apply filters if provided
         if filters:
             if 'category' in filters and filters['category']:
-                if filters['category'].lower() not in item['category'].lower():
+                if not category_matches(filters['category'], item['category']):
                     continue
             if 'type' in filters and filters['type']:
                 if item['type'] != filters['type']:
