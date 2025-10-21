@@ -52,8 +52,9 @@ archive-old-implementation/
 
 # Agent logs (may contain sensitive info)
 .agent/logs/session-*.md
-# But include progress reports
+# But include progress reports and major session summaries
 !.agent/logs/phase-*-progress.md
+!.agent/logs/session-2025-10-21-health-tracking.md
 
 # Personal learning notes (private)
 Parth_Learning_Databases.md
