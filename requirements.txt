@@ -8,7 +8,7 @@ numpy==2.0.2  # Still needed for cosine similarity
 
 # Database
 # SQLite is built into Python - no installation needed
-psycopg2-binary==2.9.9  # PostgreSQL adapter for production
+psycopg[binary]>=3.2  # Modern PostgreSQL adapter with Python 3.13 support
 
 # Optional: If you want to use Flask API (api_server.py)
 flask==3.1.0

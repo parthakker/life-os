@@ -13,32 +13,32 @@ DB_PATH = Path(__file__).parent.parent / 'data.db'
 # If DATABASE_URL is set, we MUST use PostgreSQL
 if DATABASE_URL:
     try:
-        import psycopg2
-        import psycopg2.extras
-        PSYCOPG2_AVAILABLE = True
+        import psycopg
+        from psycopg.rows import dict_row
+        PSYCOPG_AVAILABLE = True
     except ImportError as e:
-        print(f"[CRITICAL ERROR] DATABASE_URL is set but psycopg2 is not available!")
+        print(f"[CRITICAL ERROR] DATABASE_URL is set but psycopg is not available!")
         print(f"Import error: {e}")
-        print("Install with: pip install psycopg2-binary")
-        raise RuntimeError("Cannot use PostgreSQL without psycopg2-binary")
+        print("Install with: pip install 'psycopg[binary]'")
+        raise RuntimeError("Cannot use PostgreSQL without psycopg[binary]")
 else:
     # Local development - try to import but don't require it
     try:
-        import psycopg2
-        import psycopg2.extras
-        PSYCOPG2_AVAILABLE = True
+        import psycopg
+        from psycopg.rows import dict_row
+        PSYCOPG_AVAILABLE = True
     except ImportError:
-        PSYCOPG2_AVAILABLE = False
+        PSYCOPG_AVAILABLE = False
 
 def get_db_connection():
     """
     Get database connection - auto-detects PostgreSQL vs SQLite
     Returns: (connection, cursor, db_type)
     """
-    if DATABASE_URL and PSYCOPG2_AVAILABLE:
-        # Production: Use PostgreSQL
-        conn = psycopg2.connect(DATABASE_URL)
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    if DATABASE_URL and PSYCOPG_AVAILABLE:
+        # Production: Use PostgreSQL with psycopg3
+        conn = psycopg.connect(DATABASE_URL)
+        cursor = conn.cursor(row_factory=dict_row)
         return conn, cursor, 'postgres'
     else:
         # Local development: Use SQLite
@@ -124,6 +124,6 @@ def execute_insert(query, params, return_id=True):
 
 def get_db_type():
     """Return current database type: 'postgres' or 'sqlite'"""
-    if DATABASE_URL and PSYCOPG2_AVAILABLE:
+    if DATABASE_URL and PSYCOPG_AVAILABLE:
         return 'postgres'
     return 'sqlite'
