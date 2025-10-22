@@ -385,10 +385,11 @@ def execute_log_sleep(hours, date=None, notes=None):
     if not date:
         date = (datetime.now() - timedelta(days=1)).date().isoformat()
 
-    # Insert or replace sleep log
+    # Insert sleep log (PostgreSQL compatible)
     execute_insert(
-        'INSERT OR REPLACE INTO sleep_logs (date, hours, notes) VALUES (?, ?, ?)',
-        (date, hours, notes)
+        'INSERT INTO sleep_logs (date, hours, notes) VALUES (?, ?, ?)',
+        (date, hours, notes),
+        return_id=False
     )
 
     return {
@@ -435,8 +436,9 @@ def execute_log_sauna(duration_minutes, num_visits=1, date=None):
         date = datetime.now().date().isoformat()
 
     execute_insert(
-        'INSERT OR REPLACE INTO sauna_logs (date, num_visits, duration_minutes) VALUES (?, ?, ?)',
-        (date, num_visits, duration_minutes)
+        'INSERT INTO sauna_logs (date, num_visits, duration_minutes) VALUES (?, ?, ?)',
+        (date, num_visits, duration_minutes),
+        return_id=False
     )
 
     return {
@@ -450,8 +452,9 @@ def execute_log_inbody(weight, smm, pbf, ecw_tbw_ratio, date=None, notes=None):
         date = datetime.now().date().isoformat()
 
     execute_insert(
-        'INSERT OR REPLACE INTO inbody_measurements (date, weight, smm, pbf, ecw_tbw_ratio, notes) VALUES (?, ?, ?, ?, ?, ?)',
-        (date, weight, smm, pbf, ecw_tbw_ratio, notes)
+        'INSERT INTO inbody_measurements (date, weight, smm, pbf, ecw_tbw_ratio, notes) VALUES (?, ?, ?, ?, ?, ?)',
+        (date, weight, smm, pbf, ecw_tbw_ratio, notes),
+        return_id=False
     )
 
     return {
