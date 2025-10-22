@@ -123,3 +123,6 @@ NOTES.txt
 # - scripts/rag_query.py (RAG queries)
 # - scripts/tools_manifest.py (tool definitions)
 # ====================================================================
+
+.vercel
+.claude/settings.local.json

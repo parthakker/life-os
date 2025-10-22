@@ -7,17 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, Circle, Clock } from 'lucide-react';
 
 export default function HomePage() {
-  const { data: tasks, isLoading: tasksLoading } = useQuery({
+  const { data: tasks, isLoading: tasksLoading, error: tasksError } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => api.getTasks(),
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.getCategories(),
   });
 
-  const { data: healthStatus } = useQuery({
+  const { data: healthStatus, error: healthError } = useQuery({
     queryKey: ['health'],
     queryFn: () => api.health(),
   });
@@ -58,6 +58,11 @@ export default function HomePage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
+              ) : tasksError ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-sm text-destructive">Error loading tasks</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(tasksError as Error).message}</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -90,6 +95,11 @@ export default function HomePage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
+              ) : categoriesError ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-sm text-destructive">Error loading categories</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(categoriesError as Error).message}</p>
+                </div>
               ) : (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total categories</span>
@@ -106,7 +116,12 @@ export default function HomePage() {
               <CardDescription>Backend health</CardDescription>
             </CardHeader>
             <CardContent>
-              {healthStatus ? (
+              {healthError ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-sm text-destructive">Error loading health status</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(healthError as Error).message}</p>
+                </div>
+              ) : healthStatus ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Database</span>
