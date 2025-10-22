@@ -8,7 +8,7 @@ Phase 2 Integration - Ready for activation
 import os
 from datetime import datetime
 import anthropic
-from vector_store import search_memory
+from .vector_store import search_memory
 
 
 def execute_rag_query(user_query, query_type='all', filters=None):

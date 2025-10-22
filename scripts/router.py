@@ -8,10 +8,10 @@ import json
 import sys
 from datetime import datetime, timedelta
 import anthropic
-from tools_manifest import get_tool_prompt
-from vector_store import add_to_vector_store
-from rag_query import execute_rag_query
-from db_helper import execute_query, execute_insert
+from .tools_manifest import get_tool_prompt
+from .vector_store import add_to_vector_store
+from .rag_query import execute_rag_query
+from .db_helper import execute_query, execute_insert
 
 
 def get_category_id(category_name):
