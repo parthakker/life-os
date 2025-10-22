@@ -223,15 +223,20 @@ async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown"""
     print("[OK] Starting webhook bot...")
 
-    # Set webhook with Telegram
+    # Set webhook with Telegram (wrap in try/except to prevent startup crashes)
     webhook_url = f"{WEBHOOK_URL}/telegram-webhook"
     print(f"[OK] Setting webhook URL: {webhook_url}")
 
-    await ptb_app.bot.set_webhook(
-        url=webhook_url,
-        allowed_updates=Update.ALL_TYPES,
-        secret_token=SECRET_TOKEN  # Security: validates requests from Telegram
-    )
+    try:
+        await ptb_app.bot.set_webhook(
+            url=webhook_url,
+            allowed_updates=Update.ALL_TYPES,
+            secret_token=SECRET_TOKEN  # Security: validates requests from Telegram
+        )
+        print("[OK] Webhook set successfully!")
+    except Exception as e:
+        print(f"[WARNING] Failed to set webhook: {e}")
+        print("[WARNING] Service will start anyway - webhook can be set manually")
 
     async with ptb_app:
         await ptb_app.start()
