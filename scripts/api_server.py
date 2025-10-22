@@ -107,9 +107,14 @@ def get_category_task_counts():
             all_ids = [cat_id] + child_ids
 
             # Count active tasks (not completed) in this category and immediate children
-            placeholders = ','.join('?' * len(all_ids))
+            # Use %s for PostgreSQL compatibility (db_helper will handle conversion if SQLite)
+            db_type = get_db_type()
+            placeholder = '%s' if db_type == 'postgres' else '?'
+            placeholders = ','.join([placeholder] * len(all_ids))
+            # PostgreSQL uses FALSE for boolean, SQLite uses 0
+            completed_value = 'FALSE' if db_type == 'postgres' else '0'
             result = execute_query(
-                f"SELECT COUNT(*) as count FROM tasks WHERE category_id IN ({placeholders}) AND completed = 0",
+                f"SELECT COUNT(*) as count FROM tasks WHERE category_id IN ({placeholders}) AND completed = {completed_value}",
                 tuple(all_ids),
                 fetch='one'
             )
@@ -143,7 +148,10 @@ def get_category_note_counts():
             all_ids = [cat_id] + child_ids
 
             # Count notes in this category and immediate children
-            placeholders = ','.join('?' * len(all_ids))
+            # Use %s for PostgreSQL compatibility (db_helper will handle conversion if SQLite)
+            db_type = get_db_type()
+            placeholder = '%s' if db_type == 'postgres' else '?'
+            placeholders = ','.join([placeholder] * len(all_ids))
             result = execute_query(
                 f"SELECT COUNT(*) as count FROM notes WHERE category_id IN ({placeholders})",
                 tuple(all_ids),

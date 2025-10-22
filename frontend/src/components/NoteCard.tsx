@@ -39,60 +39,59 @@ export function NoteCard({ note, onEdit }: NoteCardProps) {
   };
 
   return (
-    <div className="group relative p-4 border rounded-lg bg-card hover:shadow-md transition-shadow">
-      {/* Header with actions */}
-      <div className="flex items-start justify-between mb-3">
+    <div className="group relative p-2.5 border rounded-lg bg-card hover:shadow-md transition-shadow">
+      {/* Header with actions and date */}
+      <div className="flex items-start justify-between mb-1.5">
         <div className="flex-1">
           {note.category_name && (
-            <Badge variant="secondary" className="mb-2">
+            <Badge variant="secondary" className="text-xs">
               {note.category_name}
             </Badge>
           )}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(note)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground">
+            {new Date(note.created_date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            })}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreVertical className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(note)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Note Content */}
       <div className="prose dark:prose-invert max-w-none prose-sm">
         {note.content.split('\n').map((line, i) => (
-          <p key={i} className="mb-2 last:mb-0">
+          <p key={i} className="mb-1 last:mb-0 text-sm">
             {line || '\u00A0'}
           </p>
         ))}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-3 text-xs text-muted-foreground">
-        {new Date(note.created_date).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })}
       </div>
     </div>
   );

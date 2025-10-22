@@ -4,7 +4,7 @@
  */
 
 import type { Task } from '@/lib/api';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,6 @@ export function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardP
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
-        year: 'numeric',
       });
     } catch {
       return dateString;
@@ -35,19 +34,19 @@ export function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardP
 
   return (
     <Card className={task.completed ? 'opacity-60' : ''}>
-      <CardContent className="pt-6">
-        <div className="flex items-start gap-3">
+      <CardContent className="py-2.5 px-3">
+        <div className="flex items-start gap-2">
           <Checkbox
             checked={task.completed}
             onCheckedChange={() => onToggleComplete(task.id)}
-            className="mt-1"
+            className="mt-0.5"
           />
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-0">
             <p className={`text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
               {task.content}
             </p>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
               {task.category_name && (
                 <Badge variant="secondary" className="text-xs">
                   {task.category_name}
@@ -65,27 +64,35 @@ export function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardP
               )}
             </div>
           </div>
+
+          {/* Action buttons and created date on the right */}
+          <div className="flex items-start gap-1 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(task)}
+              className="h-6 w-6 p-0"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(task.id)}
+              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Created date at bottom right */}
+        <div className="flex justify-end mt-1">
+          <span className="text-xs text-muted-foreground">
+            {formatDate(task.created_date)}
+          </span>
         </div>
       </CardContent>
-
-      <CardFooter className="flex justify-end gap-2 pt-0 pb-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(task)}
-          className="h-8 px-2"
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(task.id)}
-          className="h-8 px-2 text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

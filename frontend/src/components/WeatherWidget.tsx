@@ -3,17 +3,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Cloud, CloudRain, CloudSnow, Sun, Wind, Loader2 } from 'lucide-react';
 
 const API_KEY = '5dd9f6966bc21ea6f112dd6b69dc3e6d';
-const CITY = 'New York'; // Default city - can be made configurable
+const CITY = 'Lawrenceville,NJ,US';
 
-interface WeatherData {
+interface HourlyWeather {
+  time: string;
   temp: number;
   condition: string;
-  description: string;
   icon: string;
 }
 
 export function WeatherWidget() {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [hourlyWeather, setHourlyWeather] = useState<HourlyWeather[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -27,18 +27,29 @@ export function WeatherWidget() {
   async function fetchWeather() {
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${API_KEY}&units=imperial`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&appid=${API_KEY}&units=imperial`
       );
 
       if (!response.ok) throw new Error('Weather fetch failed');
 
       const data = await response.json();
-      setWeather({
-        temp: Math.round(data.main.temp),
-        condition: data.weather[0].main,
-        description: data.weather[0].description,
-        icon: data.weather[0].icon,
+
+      // Get next 6 forecast periods (18 hours with 3-hour intervals)
+      const forecasts = data.list.slice(0, 6).map((item: any) => {
+        const date = new Date(item.dt * 1000);
+        const hours = date.getHours();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHour = hours % 12 || 12;
+
+        return {
+          time: `${displayHour}${ampm}`,
+          temp: Math.round(item.main.temp),
+          condition: item.weather[0].main,
+          icon: item.weather[0].icon,
+        };
       });
+
+      setHourlyWeather(forecasts);
       setLoading(false);
       setError(false);
     } catch (err) {
@@ -66,30 +77,44 @@ export function WeatherWidget() {
 
   return (
     <Card className="bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20">
-      <CardContent className="pt-4 pb-3">
-        <div className="flex items-center justify-between">
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Loading...</span>
+      <CardContent className="pt-3 pb-3 px-2">
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 py-2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Loading...</span>
+          </div>
+        ) : error ? (
+          <div className="text-xs text-muted-foreground text-center py-2">
+            Weather unavailable
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {/* Header */}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Lawrenceville, NJ
+              </span>
+              <span className="text-xs text-muted-foreground">Next 18hrs</span>
             </div>
-          ) : error ? (
-            <div className="text-xs text-muted-foreground">Weather unavailable</div>
-          ) : weather ? (
-            <>
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold">{weather.temp}°</span>
-                <span className="text-xs text-muted-foreground capitalize">
-                  {weather.description}
-                </span>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                {getWeatherIcon(weather.condition)}
-                <span className="text-xs text-muted-foreground">{CITY}</span>
-              </div>
-            </>
-          ) : null}
-        </div>
+
+            {/* Horizontal Scroll of Hourly Forecasts */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              {hourlyWeather.map((forecast, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center gap-1 min-w-[60px] p-2 rounded-lg bg-background/50 border border-sky-500/10 transition-all duration-300 hover:bg-sky-500/10 hover:border-sky-500/30 hover:scale-105 hover:shadow-md cursor-pointer"
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                >
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {forecast.time}
+                  </span>
+                  {getWeatherIcon(forecast.condition)}
+                  <span className="text-sm font-bold">{forecast.temp}°</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

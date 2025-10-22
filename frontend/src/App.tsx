@@ -11,7 +11,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
+      retry: 3,
+      staleTime: 0,
+      refetchOnMount: true,
     },
   },
 });
@@ -29,6 +31,10 @@ function App() {
           <header className="border-b">
             <div className="container mx-auto px-4 py-2.5">
               <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl font-bold leading-tight">Life OS</h1>
+                  <p className="text-xs text-muted-foreground">- Built for Parth, by Parth.</p>
+                </div>
                 <div className="flex items-center gap-4">
                   <nav className="flex gap-4">
                     <button
@@ -67,7 +73,6 @@ function App() {
                   </nav>
                   <ThemeToggle />
                 </div>
-                <h1 className="text-xl font-bold">Life OS</h1>
               </div>
             </div>
           </header>

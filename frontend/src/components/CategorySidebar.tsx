@@ -21,14 +21,13 @@ interface CategoryTreeItemProps {
   onSelect: (id: number) => void;
   level: number;
   taskCounts: Record<number, number>;
-  noteCounts: Record<number, number>;
   editMode: boolean;
   onEdit: (category: Category, mode: 'rename' | 'move') => void;
   onAddChild: (parentCategory: Category) => void;
   onDelete: (category: Category) => void;
 }
 
-function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, noteCounts, editMode, onEdit, onAddChild, onDelete }: CategoryTreeItemProps) {
+function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, editMode, onEdit, onAddChild, onDelete }: CategoryTreeItemProps) {
   const [isExpanded, setIsExpanded] = useState(level === 0); // Top-level collapsed by default
   const hasChildren = category.children && category.children.length > 0;
   const isSelected = selectedId === category.id;
@@ -46,19 +45,19 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
     >
       <div className={cn("flex items-center gap-2 flex-1 min-w-0", level > 0 && "ml-4")}>
         {hasChildren ? (
-          <button
+          <div
             onClick={(e) => {
               e.stopPropagation();
               setIsExpanded(!isExpanded);
             }}
-            className="flex-shrink-0 p-0.5 hover:bg-accent/70 rounded"
+            className="flex-shrink-0 p-0.5 hover:bg-accent/70 rounded cursor-pointer"
           >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-          </button>
+          </div>
         ) : (
           <div className="w-5" />
         )}
@@ -111,13 +110,8 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
         {/* Badges - absolutely positioned on the right */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
           {taskCounts[category.id] > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+            <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/50">
               {taskCounts[category.id]}
-            </span>
-          )}
-          {noteCounts[category.id] > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
-              {noteCounts[category.id]}
             </span>
           )}
         </div>
@@ -133,7 +127,6 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
               onSelect={onSelect}
               level={level + 1}
               taskCounts={taskCounts}
-              noteCounts={noteCounts}
               editMode={editMode}
               onEdit={onEdit}
               onAddChild={onAddChild}
@@ -147,11 +140,12 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
 }
 
 interface CategorySidebarProps {
-  onCategorySelect?: (categoryId: number | null) => void;
+  onCategorySelect?: (categoryId: number | null, categoryName: string | null) => void;
 }
 
 export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
 
   // Edit dialog state
@@ -169,28 +163,45 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
     queryFn: () => api.getCategoriesTree(),
   });
 
-  const { data: taskCounts = {} } = useQuery({
+  const { data: taskCounts = {}, error: taskCountsError } = useQuery({
     queryKey: ['categories', 'task-counts'],
     queryFn: () => api.getCategoryTaskCounts(),
+    retry: 3,
+    staleTime: 0,
   });
 
-  const { data: noteCounts = {} } = useQuery({
-    queryKey: ['categories', 'note-counts'],
-    queryFn: () => api.getCategoryNoteCounts(),
-  });
+  // Log errors for debugging
+  if (taskCountsError) {
+    console.error('Task counts error:', taskCountsError);
+  }
 
   // Calculate totals
   const totalActiveTasks = Object.values(taskCounts).reduce((sum, count) => sum + count, 0);
-  const totalNotes = Object.values(noteCounts).reduce((sum, count) => sum + count, 0);
+
+  // Helper to find category by ID in the tree
+  const findCategoryById = (cats: Category[], id: number): Category | null => {
+    for (const cat of cats) {
+      if (cat.id === id) return cat;
+      if (cat.children) {
+        const found = findCategoryById(cat.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   const handleSelect = (categoryId: number) => {
+    const category = findCategoryById(categories, categoryId);
+    const categoryName = category?.name || null;
     setSelectedCategoryId(categoryId);
-    onCategorySelect?.(categoryId);
+    setSelectedCategoryName(categoryName);
+    onCategorySelect?.(categoryId, categoryName);
   };
 
   const handleShowAll = () => {
     setSelectedCategoryId(null);
-    onCategorySelect?.(null);
+    setSelectedCategoryName(null);
+    onCategorySelect?.(null, null);
   };
 
   const handleEdit = (category: Category, mode: 'rename' | 'move') => {
@@ -233,13 +244,8 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
           <h2 className="font-semibold text-lg">Categories</h2>
           <div className="flex gap-1.5">
             {totalActiveTasks > 0 && (
-              <span className="px-2.5 py-1 text-xs font-semibold bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+              <span className="px-2.5 py-1 text-xs font-semibold bg-blue-500 dark:bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/50">
                 {totalActiveTasks}
-              </span>
-            )}
-            {totalNotes > 0 && (
-              <span className="px-2.5 py-1 text-xs font-semibold bg-green-500 dark:bg-green-600 text-white rounded-full">
-                {totalNotes}
               </span>
             )}
           </div>
@@ -273,13 +279,8 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
           </button>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
             {totalActiveTasks > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+              <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/50">
                 {totalActiveTasks}
-              </span>
-            )}
-            {totalNotes > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
-                {totalNotes}
               </span>
             )}
           </div>
@@ -294,7 +295,6 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
             onSelect={handleSelect}
             level={0}
             taskCounts={taskCounts}
-            noteCounts={noteCounts}
             editMode={editMode}
             onEdit={handleEdit}
             onAddChild={handleAddChild}
