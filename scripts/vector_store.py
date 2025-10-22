@@ -1,17 +1,18 @@
 """
 Custom Vector Store for Life OS RAG
-Lightweight implementation using OpenAI Embeddings API + JSON storage
+Production-ready implementation using OpenAI Embeddings API + JSON storage
+Works with both SQLite (local dev) and PostgreSQL (production) via db_helper abstraction
 """
 
 import os
 import json
-import sqlite3
 from pathlib import Path
 from datetime import datetime
 import numpy as np
 from openai import OpenAI
+from .db_helper import execute_query
 
-DB_PATH = Path(__file__).parent.parent / 'data.db'
+# Vector store stored in same directory as script (works on Render)
 VECTOR_STORE_PATH = Path(__file__).parent.parent / 'vector_store.json'
 
 # OpenAI API configuration
@@ -50,6 +51,8 @@ def get_embedding(text):
 def vectorize_all_data(force=False):
     """
     Vectorize all tasks and notes in the database
+    Works with both SQLite and PostgreSQL via db_helper
+
     Args:
         force: If True, re-vectorize even if vector store exists
     """
@@ -61,26 +64,19 @@ def vectorize_all_data(force=False):
 
     print("[Vector Store] Starting vectorization...")
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    # Get all tasks
-    cursor.execute('''
+    # Get all tasks using db_helper (works with SQLite and PostgreSQL)
+    tasks = execute_query('''
         SELECT t.id, c.name, t.content, t.due_date, t.created_date, t.completed
         FROM tasks t
         JOIN categories c ON t.category_id = c.id
-    ''')
-    tasks = cursor.fetchall()
+    ''', fetch='all')
 
-    # Get all notes
-    cursor.execute('''
+    # Get all notes using db_helper
+    notes = execute_query('''
         SELECT n.id, c.name, n.content, n.created_date
         FROM notes n
         JOIN categories c ON n.category_id = c.id
-    ''')
-    notes = cursor.fetchall()
-
-    conn.close()
+    ''', fetch='all')
 
     # Build vector store
     vector_store = {
@@ -95,7 +91,14 @@ def vectorize_all_data(force=False):
     }
 
     # Vectorize tasks
-    for task_id, category, content, due_date, created, completed in tasks:
+    for task in tasks:
+        task_id = task['id']
+        category = task['name']  # Column alias from JOIN
+        content = task['content']
+        due_date = task['due_date']
+        created = task['created_date']
+        completed = task['completed']
+
         # Create rich text for better embeddings
         embedding_text = f"{category}: {content}"
         if due_date:
@@ -109,8 +112,8 @@ def vectorize_all_data(force=False):
             'type': 'task',
             'category': category,
             'content': content,
-            'due_date': due_date,
-            'created_date': created,
+            'due_date': str(due_date) if due_date else None,
+            'created_date': str(created),
             'completed': bool(completed),
             'embedding': embedding
         })
@@ -118,7 +121,12 @@ def vectorize_all_data(force=False):
     print(f"[OK] Vectorized {len(tasks)} tasks")
 
     # Vectorize notes
-    for note_id, category, content, created in notes:
+    for note in notes:
+        note_id = note['id']
+        category = note['name']  # Column alias from JOIN
+        content = note['content']
+        created = note['created_date']
+
         # Create rich text for better embeddings
         embedding_text = f"{category}: {content}"
 
@@ -130,7 +138,7 @@ def vectorize_all_data(force=False):
             'type': 'note',
             'category': category,
             'content': content,
-            'created_date': created,
+            'created_date': str(created),
             'embedding': embedding
         })
 
