@@ -811,14 +811,14 @@ def health_sleep():
             if not hours:
                 return jsonify({'error': 'hours is required'}), 400
 
-            # Insert or update
-            log_id = execute_insert(
-                "INSERT OR REPLACE INTO sleep_logs (date, hours, notes) VALUES (?, ?, ?)",
+            # Insert sleep log (PostgreSQL compatible)
+            execute_insert(
+                "INSERT INTO sleep_logs (date, hours, notes) VALUES (?, ?, ?)",
                 (date, hours, notes),
-                return_id=True
+                return_id=False
             )
 
-            return jsonify({'id': log_id, 'date': date, 'hours': hours}), 201
+            return jsonify({'date': date, 'hours': hours}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -948,13 +948,14 @@ def health_sauna():
             if not duration_minutes:
                 return jsonify({'error': 'duration_minutes is required'}), 400
 
-            log_id = execute_insert(
-                "INSERT OR REPLACE INTO sauna_logs (date, num_visits, duration_minutes) VALUES (?, ?, ?)",
+            # Insert sauna log (PostgreSQL compatible)
+            execute_insert(
+                "INSERT INTO sauna_logs (date, num_visits, duration_minutes) VALUES (?, ?, ?)",
                 (date, num_visits, duration_minutes),
-                return_id=True
+                return_id=False
             )
 
-            return jsonify({'id': log_id, 'date': date, 'num_visits': num_visits, 'duration_minutes': duration_minutes}), 201
+            return jsonify({'date': date, 'num_visits': num_visits, 'duration_minutes': duration_minutes}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -986,13 +987,14 @@ def health_inbody():
             if not all([weight, smm, pbf, ecw_tbw_ratio]):
                 return jsonify({'error': 'weight, smm, pbf, and ecw_tbw_ratio are required'}), 400
 
-            log_id = execute_insert(
-                "INSERT OR REPLACE INTO inbody_measurements (date, weight, smm, pbf, ecw_tbw_ratio, notes) VALUES (?, ?, ?, ?, ?, ?)",
+            # Insert InBody measurement (PostgreSQL compatible)
+            execute_insert(
+                "INSERT INTO inbody_measurements (date, weight, smm, pbf, ecw_tbw_ratio, notes) VALUES (?, ?, ?, ?, ?, ?)",
                 (date, weight, smm, pbf, ecw_tbw_ratio, notes),
-                return_id=True
+                return_id=False
             )
 
-            return jsonify({'id': log_id, 'date': date, 'weight': weight}), 201
+            return jsonify({'date': date, 'weight': weight}), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 

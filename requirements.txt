@@ -10,6 +10,12 @@ numpy==2.0.2  # Still needed for cosine similarity
 # SQLite is built into Python - no installation needed
 psycopg[binary]>=3.2  # Modern PostgreSQL adapter with Python 3.13 support
 
-# Optional: If you want to use Flask API (api_server.py)
+# Dashboard API (Flask)
 flask==3.1.0
 flask-cors==5.0.0
+
+# Production webhook server (2025 industry standard)
+fastapi==0.115.0  # Modern async web framework
+uvicorn[standard]==0.32.0  # ASGI server
+gunicorn==23.0.0  # Production WSGI server
+python-multipart==0.0.9  # For FastAPI request parsing
