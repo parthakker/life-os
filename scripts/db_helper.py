@@ -7,16 +7,28 @@ import os
 import sqlite3
 from pathlib import Path
 
-# Try to import psycopg2 (only available in production)
-try:
-    import psycopg2
-    import psycopg2.extras
-    PSYCOPG2_AVAILABLE = True
-except ImportError:
-    PSYCOPG2_AVAILABLE = False
-
 DATABASE_URL = os.getenv('DATABASE_URL')
 DB_PATH = Path(__file__).parent.parent / 'data.db'
+
+# If DATABASE_URL is set, we MUST use PostgreSQL
+if DATABASE_URL:
+    try:
+        import psycopg2
+        import psycopg2.extras
+        PSYCOPG2_AVAILABLE = True
+    except ImportError as e:
+        print(f"[CRITICAL ERROR] DATABASE_URL is set but psycopg2 is not available!")
+        print(f"Import error: {e}")
+        print("Install with: pip install psycopg2-binary")
+        raise RuntimeError("Cannot use PostgreSQL without psycopg2-binary")
+else:
+    # Local development - try to import but don't require it
+    try:
+        import psycopg2
+        import psycopg2.extras
+        PSYCOPG2_AVAILABLE = True
+    except ImportError:
+        PSYCOPG2_AVAILABLE = False
 
 def get_db_connection():
     """
