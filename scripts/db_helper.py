@@ -73,8 +73,12 @@ def execute_query(query, params=None, fetch=None):
 
         if fetch == 'one':
             result = cursor.fetchone()
+            # Convert Row object to pure dict for compatibility
+            return dict(result) if result else None
         elif fetch == 'all':
             result = cursor.fetchall()
+            # Convert list of Row objects to list of dicts
+            return [dict(row) for row in result] if result else []
         else:
             result = None
 
@@ -110,7 +114,8 @@ def execute_insert(query, params, return_id=True):
         if return_id:
             if db_type == 'postgres':
                 result = cursor.fetchone()
-                new_id = result[0] if result else None
+                # With dict_row, access by column name 'id' from RETURNING clause
+                new_id = result['id'] if result else None
             else:
                 new_id = cursor.lastrowid
         else:
