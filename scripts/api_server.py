@@ -12,9 +12,9 @@ from pathlib import Path
 # Add parent directory to path to import our modules
 sys.path.append(str(Path(__file__).parent))
 
-from db_helper import execute_query, execute_insert, get_db_type
-from vector_store import add_to_vector_store, search_memory
-from rag_query import execute_rag_query
+from .db_helper import execute_query, execute_insert, get_db_type
+from .vector_store import add_to_vector_store, search_memory
+from .rag_query import execute_rag_query
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend development
