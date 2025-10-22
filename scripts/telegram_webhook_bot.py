@@ -13,7 +13,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Import your existing router functions
-from router import (
+from .router import (
     route_message,
     execute_add_task,
     execute_add_note,
@@ -88,7 +88,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /stats command"""
-    from db_helper import execute_query
+    from .db_helper import execute_query
 
     try:
         # Get task counts
