@@ -6,11 +6,7 @@ import { WeddingCountdown } from './WeddingCountdown';
 import { WeatherWidget } from './WeatherWidget';
 import { CalendarPreview } from './CalendarPreview';
 
-interface StatsBarProps {
-  categoryId?: number | null;
-}
-
-export function StatsBar({ categoryId }: StatsBarProps) {
+export function StatsBar() {
   // Fetch health summary data
   const { data: healthSummary } = useQuery({
     queryKey: ['health', 'summary'],

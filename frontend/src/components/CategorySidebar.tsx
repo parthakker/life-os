@@ -145,7 +145,6 @@ interface CategorySidebarProps {
 
 export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
 
   // Edit dialog state
@@ -194,13 +193,11 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
     const category = findCategoryById(categories, categoryId);
     const categoryName = category?.name || null;
     setSelectedCategoryId(categoryId);
-    setSelectedCategoryName(categoryName);
     onCategorySelect?.(categoryId, categoryName);
   };
 
   const handleShowAll = () => {
     setSelectedCategoryId(null);
-    setSelectedCategoryName(null);
     onCategorySelect?.(null, null);
   };
 

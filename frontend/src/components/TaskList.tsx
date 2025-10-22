@@ -18,9 +18,8 @@ import { TaskCard } from './TaskCard';
 import { TaskEditDialog } from './TaskEditDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Loader2, Search, SlidersHorizontal, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { Plus, Loader2, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -125,18 +124,6 @@ export function TaskList({ categoryId }: TaskListProps) {
 
     return { 'All Tasks': processedTasks };
   }, [processedTasks, groupBy]);
-
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const total = processedTasks.length;
-    const completed = processedTasks.filter((t) => t.completed).length;
-    const pending = total - completed;
-    const overdue = processedTasks.filter((t) =>
-      !t.completed && t.due_date && new Date(t.due_date) < new Date()
-    ).length;
-
-    return { total, completed, pending, overdue };
-  }, [processedTasks]);
 
   // Mutations
   const toggleCompletion = useToggleTaskCompletion();
