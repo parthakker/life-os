@@ -77,48 +77,50 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
   );
 
   return (
-    <div className="relative">
-      {editMode ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {categoryButton}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem onClick={() => onEdit(category, 'rename')}>
-              <Edit className="h-4 w-4 mr-2" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAddChild(category)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Subcategory
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(category, 'move')}>
-              <Move className="h-4 w-4 mr-2" />
-              Move to...
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        categoryButton
-      )}
+    <div>
+      <div className="relative">
+        {editMode ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {categoryButton}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => onEdit(category, 'rename')}>
+                <Edit className="h-4 w-4 mr-2" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddChild(category)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Subcategory
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(category, 'move')}>
+                <Move className="h-4 w-4 mr-2" />
+                Move to...
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          categoryButton
+        )}
 
-      {/* Badges - absolutely positioned on the right */}
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
-        {taskCounts[category.id] > 0 && (
-          <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
-            {taskCounts[category.id]}
-          </span>
-        )}
-        {noteCounts[category.id] > 0 && (
-          <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
-            {noteCounts[category.id]}
-          </span>
-        )}
+        {/* Badges - absolutely positioned on the right */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
+          {taskCounts[category.id] > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
+              {taskCounts[category.id]}
+            </span>
+          )}
+          {noteCounts[category.id] > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-green-500 dark:bg-green-600 text-white rounded-full">
+              {noteCounts[category.id]}
+            </span>
+          )}
+        </div>
       </div>
 
       {hasChildren && isExpanded && (
