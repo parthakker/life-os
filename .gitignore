@@ -1,72 +1,125 @@
-# Sensitive files - DO NOT commit
-.env
-*.env
+# ==================== LIFE OS - PRODUCTION ONLY ====================
+# This .gitignore ensures ONLY production code is committed
+# No old code, no local databases, no migration scripts
+# ====================================================================
 
-# Database files (contains your personal data)
-# TEMPORARY: Uncommenting for initial deployment ONLY
-# data.db
-# *.db
+# ==================== LOCAL DEVELOPMENT ====================
+# Local SQLite databases (production uses PostgreSQL)
+data.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 
-# Vector store (contains embeddings of your data)
-# TEMPORARY: Including in git for production deployment
-# vector_store.json
+# Vector store files (regenerated from production DB)
+vector_store.json
+vector_store_*.json
+*_backup.json
+*.backup
 
-# Python cache
+# ==================== PYTHON ====================
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual environments
 venv/
-env/
 ENV/
+env/
 .venv
 
-# IDE
+# ==================== OLD/DEPRECATED FILES ====================
+# Prevent ANY old or deprecated code from returning
+*DEPRECATED*
+*_old*
+*_OLD*
+*.old
+*.OLD
+*.bak
+*.BAK
+*_backup.py
+*_backup.js
+
+# Old bot implementations
+telegram_bot_polling.py
+telegram_bot_old.py
+
+# ==================== MIGRATION SCRIPTS (ONE-TIME USE) ====================
+# These were already run - NEVER commit again
+scripts/migrate_*.py
+scripts/fix_*.py
+scripts/diagnose_*.py
+scripts/verify_*.py
+scripts/build_production_*.py
+scripts/test_*.py
+
+# ==================== FRONTEND ====================
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production
+frontend/dist/
+frontend/build/
+
+# Local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================== EDITOR / IDE ====================
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Claude Code config (contains MCP settings)
-.claude/
-# But include workflows (these should be version controlled)
-!.claude/workflows/
-
-# OS files
+*~
 .DS_Store
-Thumbs.db
 
-# Logs
-*.log
+# ==================== ENVIRONMENT ====================
+# Secrets (use Render dashboard instead)
+.env
+*.env
 
-# Google Calendar credentials (Phase 2B)
-google-calendar-credentials.json
-google-calendar-token.json
+# ==================== DOCUMENTATION DRAFTS ====================
+# Keep only final docs, not drafts
+*_DRAFT*
+*_draft*
+TODO.txt
+NOTES.txt
 
-# Archive folders (your backups)
-archive/
-old-data-*/
-archive-old-implementation/
-
-# Agent logs (may contain sensitive info)
-.agent/logs/session-*.md
-# But include progress reports and major session summaries
-!.agent/logs/phase-*-progress.md
-!.agent/logs/session-2025-10-21-health-tracking.md
-!.agent/logs/session-2025-10-21-wedding-search-fix.md
-
-# Personal learning notes (private)
-Parth_Learning_Databases.md
-Understanding_AI_Architecture_Patterns.md
-
-# Test files
-test_*.py
-*_test.py
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
+# ==================== PRODUCTION FILES TO KEEP ====================
+# These are the ONLY Python scripts in production:
+# - scripts/telegram_webhook_bot.py (webhook bot)
+# - scripts/api_server.py (dashboard API)
+# - scripts/router.py (message routing)
+# - scripts/db_helper.py (database abstraction)
+# - scripts/vector_store.py (RAG embeddings)
+# - scripts/rag_query.py (RAG queries)
+# - scripts/tools_manifest.py (tool definitions)
+# ====================================================================
