@@ -108,7 +108,7 @@ function CategoryTreeItem({ category, selectedId, onSelect, level, taskCounts, n
       )}
 
       {/* Badges - absolutely positioned on the right */}
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
         {taskCounts[category.id] > 0 && (
           <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
             {taskCounts[category.id]}
@@ -269,7 +269,7 @@ export function CategorySidebar({ onCategorySelect }: CategorySidebarProps) {
             <Folder className="h-4 w-4" />
             <span>All</span>
           </button>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none z-10">
             {totalActiveTasks > 0 && (
               <span className="inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 text-xs font-medium bg-blue-500 dark:bg-blue-600 text-white rounded-full">
                 {totalActiveTasks}
