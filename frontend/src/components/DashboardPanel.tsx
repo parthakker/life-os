@@ -127,16 +127,6 @@ export function DashboardPanel() {
 
         {/* InBody Trends Chart */}
         <InBodyChart data={inbodyData || []} />
-
-        {/* Top Categories Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Coming soon...</p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

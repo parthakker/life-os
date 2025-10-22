@@ -27,9 +27,8 @@ function App() {
         <div className="min-h-screen bg-background text-foreground">
           {/* Header */}
           <header className="border-b">
-            <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto px-4 py-2.5">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Life OS</h1>
                 <div className="flex items-center gap-4">
                   <nav className="flex gap-4">
                     <button
@@ -68,6 +67,7 @@ function App() {
                   </nav>
                   <ThemeToggle />
                 </div>
+                <h1 className="text-xl font-bold">Life OS</h1>
               </div>
             </div>
           </header>

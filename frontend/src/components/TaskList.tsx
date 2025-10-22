@@ -191,54 +191,18 @@ export function TaskList({ categoryId }: TaskListProps) {
     updateTask.isPending || createTask.isPending || toggleCompletion.isPending || deleteTask.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Tasks</h1>
-        <Button onClick={handleCreateNew}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Task
+        <h2 className="text-lg font-semibold">Tasks</h2>
+        <Button size="sm" onClick={handleCreateNew}>
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
+          New
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      {!isLoading && tasks.length > 0 && (
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs">Total Tasks</CardDescription>
-              <CardTitle className="text-2xl">{stats.total}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs flex items-center gap-1">
-                <Circle className="h-3 w-3" /> Pending
-              </CardDescription>
-              <CardTitle className="text-2xl">{stats.pending}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Completed
-              </CardDescription>
-              <CardTitle className="text-2xl">{stats.completed}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs flex items-center gap-1">
-                <Clock className="h-3 w-3 text-destructive" /> Overdue
-              </CardDescription>
-              <CardTitle className="text-2xl text-destructive">{stats.overdue}</CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
-      )}
-
       {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2.5">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -252,7 +216,7 @@ export function TaskList({ categoryId }: TaskListProps) {
         </div>
 
         {/* Filter Controls */}
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
           <Select value={completedFilter} onValueChange={setCompletedFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Status" />
@@ -289,7 +253,7 @@ export function TaskList({ categoryId }: TaskListProps) {
       </div>
 
       {/* Task List */}
-      <div className="space-y-6">
+      <div className="space-y-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -312,7 +276,7 @@ export function TaskList({ categoryId }: TaskListProps) {
           </div>
         ) : (
           Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
-            <div key={groupName} className="space-y-4">
+            <div key={groupName} className="space-y-2">
               {/* Group Header */}
               {groupBy !== 'none' && (
                 <div className="flex items-center gap-3">
@@ -322,7 +286,7 @@ export function TaskList({ categoryId }: TaskListProps) {
               )}
 
               {/* Tasks in Group */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {groupTasks.map((task) => (
                   <TaskCard
                     key={task.id}

@@ -50,31 +50,29 @@ export function NotesList({ categoryId }: NotesListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">
-            {categoryId ? 'Category Notes' : 'All Notes'}
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="text-lg font-semibold">Notes</h2>
+          <p className="text-xs text-muted-foreground">
             {notes.length} {notes.length === 1 ? 'note' : 'notes'}
           </p>
         </div>
         <Button onClick={handleNewNote} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          New Note
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
+          New
         </Button>
       </div>
 
       {/* Notes List */}
       {notes.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No notes yet</p>
-          <p className="text-sm mt-2">Click "New Note" to create one</p>
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="text-sm">No notes yet</p>
+          <p className="text-xs mt-1">Click "New" to create one</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {notes.map((note) => (
             <NoteCard key={note.id} note={note} onEdit={handleEdit} />
           ))}
